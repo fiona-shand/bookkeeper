@@ -90,7 +90,7 @@ Library key and adopted rather than doubled.
 npm run check
 ```
 
-Runs 78 assertions over the parts that talk to other people's services —
+Runs 89 assertions over the parts that talk to other people's services —
 Open Library search parsing, colour extraction, Goodreads feed parsing, and the
 import's database behaviour. They use fixtures rather than live calls, so they
 work offline; the import checks write to the database and clean up after
@@ -133,7 +133,8 @@ scripts/            offline checks (npm run check)
   `USER_AGENT` in `src/lib/openlibrary.ts` before running this anywhere public.
 - Genre is guessed from Open Library's subjects, which are free-form and messy.
   The add flow lets you correct it before the book goes on the shelf.
-- Search results don't carry binding, so new books default to trade paperback.
+- Binding comes from Open Library's free-text `physical_format`; anything
+  unrecognised falls back to trade paperback.
 
 ## Next steps
 
