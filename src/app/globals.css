@@ -1,0 +1,334 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #f1ede6;
+  --color-paper-deep: #e8e2d8;
+  --color-card: #f8f5ef;
+  --color-ink: #2b2620;
+  --color-ink-soft: #6b6357;
+  --color-ink-faint: #9a9083;
+  --color-rule: #d8d0c3;
+  --color-accent: #8a5b33;
+
+  --font-display: var(--font-cormorant), ui-serif, Georgia, serif;
+  --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+}
+
+html,
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  /* A faint warmth toward the top, like light falling on paper. */
+  background-image: radial-gradient(
+    120% 80% at 50% 0%,
+    #f7f4ee 0%,
+    var(--color-paper) 55%,
+    var(--color-paper-deep) 100%
+  );
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* ---------- shared type ---------- */
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(3rem, 9vw, 5.75rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+/* ---------- recommend a book ---------- */
+
+.recommend-button {
+  font-family: var(--font-sans);
+  font-size: 0.63rem;
+  font-weight: 400;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  border: 1px solid var(--color-rule);
+  background: transparent;
+  padding: 0.85rem 1.75rem;
+  cursor: pointer;
+  transition: border-color 0.25s ease, color 0.25s ease;
+}
+
+.recommend-button:hover {
+  border-color: var(--color-ink-soft);
+  color: var(--color-ink);
+}
+
+.recommend-field {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--color-rule);
+  background: transparent;
+  padding: 0.5rem 0 0.65rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--color-ink);
+  outline: none;
+  transition: border-color 0.25s ease;
+}
+
+.recommend-field::placeholder {
+  color: var(--color-ink-faint);
+  font-style: italic;
+}
+
+.recommend-field:focus {
+  border-bottom-color: var(--color-ink-soft);
+}
+
+/* ---------- genre filters ---------- */
+
+.filter {
+  font-family: var(--font-sans);
+  font-size: 0.63rem;
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  background: transparent;
+  border: 0;
+  padding: 0.4rem 0;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.22s ease;
+  white-space: nowrap;
+}
+
+.filter::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transition: transform 0.28s cubic-bezier(0.22, 0.9, 0.3, 1);
+}
+
+.filter:hover {
+  color: var(--color-ink-soft);
+}
+
+.filter[aria-pressed="true"] {
+  color: var(--color-ink);
+}
+
+.filter[aria-pressed="true"]::after,
+.filter:hover::after {
+  transform: scaleX(1);
+}
+
+/* ---------- the shelf ---------- */
+
+.shelf-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: 2.5rem;
+  scrollbar-width: thin;
+}
+
+/* Sized to the books so the ledge below tracks the shelf when it scrolls. */
+.shelf-inner {
+  width: max-content;
+  min-width: 100%;
+  padding: 0 2rem;
+}
+
+.shelf {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+}
+
+.spine {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 1px 3px 3px 1px;
+  cursor: pointer;
+  transform-origin: bottom center;
+  box-shadow: 0 2px 6px rgba(43, 38, 32, 0.18),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.13);
+  transition: transform 0.34s cubic-bezier(0.22, 0.9, 0.3, 1),
+    box-shadow 0.34s ease, opacity 0.34s ease;
+}
+
+.spine:hover,
+.spine:focus-visible {
+  transform: translateY(-22px);
+  box-shadow: 0 16px 28px rgba(43, 38, 32, 0.28),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.13);
+}
+
+.spine:focus-visible {
+  outline: 1px solid var(--color-ink);
+  outline-offset: 4px;
+}
+
+.spine[data-selected="true"] {
+  transform: translateY(-22px);
+  box-shadow: 0 16px 28px rgba(43, 38, 32, 0.28),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.13);
+}
+
+.spine[data-dimmed="true"] {
+  opacity: 0.24;
+}
+
+.spine-face {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 0;
+  border-radius: inherit;
+  /* The curve of the spine catching the light. */
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.34) 0%,
+    rgba(255, 255, 255, 0.14) 16%,
+    rgba(255, 255, 255, 0.05) 46%,
+    rgba(0, 0, 0, 0.1) 78%,
+    rgba(0, 0, 0, 0.34) 100%
+  );
+}
+
+.spine-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1.1em;
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+.spine-title {
+  font-weight: 500;
+}
+
+.spine-author {
+  font-size: 0.8em;
+  opacity: 0.72;
+}
+
+.spine-band {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  height: 1px;
+  opacity: 0.34;
+}
+
+.spine-band-top {
+  top: 7%;
+}
+
+.spine-band-bottom {
+  bottom: 7%;
+}
+
+.board {
+  height: 10px;
+  border-radius: 0 0 2px 2px;
+  background-image: linear-gradient(
+    to bottom,
+    #cbbfa9 0%,
+    #b3a488 18%,
+    #9b8b71 45%,
+    #6f6350 100%
+  );
+  box-shadow: 0 14px 26px -10px rgba(43, 38, 32, 0.5);
+}
+
+/* ---------- book detail ---------- */
+
+.detail {
+  background: var(--color-card);
+  border: 1px solid var(--color-rule);
+  padding: 1.75rem;
+}
+
+.detail-title {
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.detail-author {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--color-ink-soft);
+}
+
+.detail-note {
+  font-family: var(--font-display);
+  font-size: 1.12rem;
+  line-height: 1.55;
+  color: var(--color-ink-soft);
+}
+
+.detail-meta dt {
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.detail-meta dd {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.hairline {
+  height: 1px;
+  background: var(--color-rule);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

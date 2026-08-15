@@ -3,43 +3,74 @@
 A reading tracker that shows your library the way you'd actually see it — as a
 shelf of book spines, not a grid of cover thumbnails.
 
-Nothing is built yet. This folder currently holds the API research that decides
-the architecture.
+```bash
+npm install
+npm run dev     # http://localhost:3000
+```
 
-## The finding that shapes the build
+Next.js 16 (App Router, Turbopack) · React 19 · Tailwind v4 · TypeScript.
+No database and no API calls yet — the shelf runs off a local catalogue in
+`src/lib/books.ts`.
+
+## The idea
 
 No public book API returns spine images. Open Library, Google Books, Hardcover
-and ISBNdb all serve front covers only. So the shelf can't be fetched — it has
-to be **generated**, from three inputs:
+and ISBNdb all serve front covers only, so the shelf can't be fetched — it's
+**generated** from three fields:
 
-| Input | Where it comes from | Drives |
+| Field | Drives | Where it will come from |
 | --- | --- | --- |
-| Page count | Any free API, or a Goodreads CSV | Spine width, via the bookbinding PPI formula |
-| Binding | `physical_format` / CSV `Binding` column | Spine height, and the ragged shelf edge |
-| Cover colour | Extracted from cover art with `node-vibrant` | Spine fill |
+| `pages` | Spine width, via the bookbinding PPI formula | Any free API, or a Goodreads CSV |
+| `binding` | Spine height, and the shelf's ragged top edge | `physical_format` / CSV `Binding` |
+| `color` | Spine fill | `node-vibrant`, sampled from the cover |
 
-That reframes the project: it's a spine-rendering app that happens to fetch
-metadata, not a book-data app with a shelf skin on top.
+That makes this a spine-rendering app that happens to fetch metadata, rather
+than a book-data app with a shelf skin on top. Full research write-up in
+`docs/bookshelf-api-research.html` — open it in a browser.
 
-## Research
+## How a spine gets drawn
 
-`docs/bookshelf-api-research.html` — the full write-up, including a working demo
-of the spine-rendering technique. Open it in a browser.
+`src/lib/spine.ts` holds the geometry. Width uses the formula printers use to
+lay out a cover:
 
-Covers: the four metadata APIs compared, cover-image endpoints and their rate
-limits, the spine geometry maths, colour extraction, Goodreads CSV import
-mapping, and the licensing constraints worth knowing before it goes public.
+```
+spine width = page count / PPI + cover allowance
+```
 
-## Suggested first step
+PPI ("pages per inch") is how many printed pages stack to an inch. Because the
+maths is real, the proportions are too: a 1,006-page paperback renders three
+times wider than a 272-page one, and hardcovers stand taller than mass market.
 
-Start at the rendering layer, not the API layer. Hand-write a JSON array of
-~15 books with page counts and hex colours and get the shelf looking right.
-No API key, no network, no database — and it's the part that decides whether
-the project is worth finishing.
+`readableInk()` picks black or cream lettering from the spine's relative
+luminance, so pale spines stay legible. The curved-light effect is one
+left-to-right gradient in `.spine-face`.
 
-Then: Goodreads CSV import to fill it → live search against Google Books →
-covers from Open Library → colour extraction last.
+## What's here
 
-## Stack sketch
+- **The shelf** — 29 books, click any spine to pull it out and read the detail card.
+- **Genre filters** — dim rather than remove, so the shelf keeps its shape.
+- **Recommend a book** — the input from the reference design. Tells you if the
+  book is already on the shelf. Submissions are local state only; they need a
+  database to persist.
 
-Next.js + Prisma + SQLite, covers cached to disk.
+## Layout
+
+```
+src/
+  app/          layout.tsx, page.tsx, globals.css, icon.svg
+  components/   Library.tsx, Spine.tsx, BookDetail.tsx, Recommend.tsx
+  lib/          books.ts (catalogue), spine.ts (geometry)
+docs/           bookshelf-api-research.html
+```
+
+## Next steps
+
+1. **Goodreads CSV import** — the export already has `Number of Pages`,
+   `Binding` and `ISBN13`, which is everything the renderer needs.
+2. **Live search** against Google Books (better relevance; needs a free API key —
+   anonymous calls share an IP-wide quota and will 429).
+3. **Covers** from `covers.openlibrary.org/b/isbn/{isbn}-L.jpg?default=false`,
+   cached on add rather than fetched per render.
+4. **Colour extraction** with `node-vibrant` at import time, replacing the
+   hand-picked hex values.
+5. **Persistence** — Prisma + SQLite, and the recommend box gets a real inbox.
