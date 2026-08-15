@@ -27,7 +27,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${jost.variable}`}>
+    // Browser extensions commonly stamp attributes onto <html> before React
+    // hydrates, which React reports as a mismatch. Suppressing here covers this
+    // element only — mismatches inside the app still surface normally.
+    <html
+      lang="en"
+      className={`${cormorant.variable} ${jost.variable}`}
+      suppressHydrationWarning
+    >
       <body>{children}</body>
     </html>
   );
