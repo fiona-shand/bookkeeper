@@ -1,32 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { BOOKS, GENRES, type Genre } from "@/lib/books";
-import BookDetail from "./BookDetail";
+import { GENRES, type Genre } from "@/lib/books";
+import type { ShelfBook } from "@/lib/queries";
+import BookView from "./BookView";
 import Spine from "./Spine";
 
-export default function Library() {
+export default function Library({ books }: { books: ShelfBook[] }) {
   const [genre, setGenre] = useState<Genre | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const selected = BOOKS.find((book) => book.id === selectedId) ?? null;
+  const selected = books.find((book) => book.id === selectedId) ?? null;
   const shown = genre
-    ? BOOKS.filter((book) => book.genre === genre).length
-    : BOOKS.length;
-
-  function toggleSelected(id: string) {
-    setSelectedId((current) => (current === id ? null : id));
-  }
+    ? books.filter((book) => book.genre === genre).length
+    : books.length;
+  const reading = books.filter((book) => book.status === "reading").length;
 
   return (
     <section className="flex flex-col gap-10">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-6">
-        <div className="hairline" />
+      <div>
+        <div className="rule-wrap">
+          <div className="hairline" />
+        </div>
 
-        <nav
-          className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2"
-          aria-label="Filter by genre"
-        >
+        <nav className="filters" aria-label="Filter by genre">
           <button
             type="button"
             className="filter"
@@ -50,48 +47,49 @@ export default function Library() {
       </div>
 
       <div>
-        <div className="shelf-scroll">
-          <div className="shelf-inner">
-            <div className="shelf">
-              {BOOKS.map((book) => (
-                <Spine
-                  key={book.id}
-                  book={book}
-                  selected={selectedId === book.id}
-                  dimmed={genre !== null && book.genre !== genre}
-                  onSelect={toggleSelected}
-                />
-              ))}
+        {books.length === 0 ? (
+          <p className="empty-shelf">
+            The shelf is empty. Add a book to start it off.
+          </p>
+        ) : (
+          <div className="shelf-scroll">
+            <div className="shelf-inner">
+              <div className="shelf" role="group" aria-label="Bookshelf">
+                {books.map((book) => (
+                  <Spine
+                    key={book.id}
+                    book={book}
+                    selected={selectedId === book.id}
+                    dimmed={genre !== null && book.genre !== genre}
+                    onSelect={setSelectedId}
+                  />
+                ))}
+              </div>
+              <div className="board" />
             </div>
-            <div className="board" />
           </div>
-        </div>
+        )}
 
-        <p className="eyebrow mt-6 text-center">
+        <p className="eyebrow count">
           {shown} {shown === 1 ? "volume" : "volumes"}
           {genre ? ` in ${genre}` : " on the shelf"}
+          {reading > 0 && !genre ? ` · ${reading} in progress` : ""}
         </p>
+
+        {books.length > 0 ? (
+          <p className="shelf-hint">Open a book to rate it and write a review.</p>
+        ) : null}
       </div>
 
-      <div className="mx-auto flex min-h-[15rem] w-full max-w-3xl items-center px-6">
-        {selected ? (
-          <div className="w-full">
-            <BookDetail book={selected} />
-          </div>
-        ) : (
-          <p
-            className="w-full text-center"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontStyle: "italic",
-              fontSize: "1.25rem",
-              color: "var(--color-ink-faint)",
-            }}
-          >
-            Pull one off the shelf.
-          </p>
-        )}
-      </div>
+      {selected ? (
+        // Keyed so opening a different book resets the form and replays the
+        // cover animation rather than reusing the previous book's state.
+        <BookView
+          key={selected.id}
+          book={selected}
+          onClose={() => setSelectedId(null)}
+        />
+      ) : null}
     </section>
   );
 }

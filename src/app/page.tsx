@@ -1,37 +1,36 @@
+import AddBook from "@/components/AddBook";
 import Library from "@/components/Library";
 import Recommend from "@/components/Recommend";
-import { BOOKS } from "@/lib/books";
+import { getShelf } from "@/lib/queries";
 
-export default function Page() {
-  const pages = BOOKS.reduce((total, book) => total + book.pages, 0);
+// The shelf is read from SQLite on every request, so mutations show up
+// immediately rather than serving a build-time snapshot.
+export const dynamic = "force-dynamic";
+
+export default async function Page() {
+  const books = await getShelf();
+  const pages = books.reduce((total, book) => total + book.pages, 0);
 
   return (
     <main className="flex flex-col gap-16 pb-28">
-      <header className="mx-auto flex w-full max-w-3xl flex-col items-center gap-7 px-6 pt-24 text-center sm:pt-32">
+      <header className="masthead">
         <p className="eyebrow">
-          {BOOKS.length} books · {pages.toLocaleString()} pages
+          {books.length} books · {pages.toLocaleString()} pages
         </p>
 
         <h1 className="hero-title">welcome to my world</h1>
 
-        <p
-          style={{
-            fontFamily: "var(--font-display)",
-            fontStyle: "italic",
-            fontSize: "1.2rem",
-            color: "var(--color-ink-soft)",
-            maxWidth: "34ch",
-          }}
-        >
+        <p className="hero-sub">
           Everything I have read, standing up the way it would in a room.
         </p>
 
-        <div className="flex min-h-[3.5rem] w-full items-start justify-center pt-2">
-          <Recommend />
+        <div className="masthead-actions">
+          <AddBook />
+          <Recommend books={books} />
         </div>
       </header>
 
-      <Library />
+      <Library books={books} />
     </main>
   );
 }

@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Book {
+  id      String @id @default(cuid())
+  title   String
+  author  String
+  // Drives spine width via the PPI formula in src/lib/spine.ts.
+  pages   Int
+  // Drives spine height: "hardcover" | "trade" | "massMarket".
+  binding String
+  genre   String
+  // Hex, sampled from the cover art when the book is added.
+  color   String
+  year    Int?
+
+  isbn           String?
+  coverUrl       String?
+  // Open Library work key, so the same book can't be added twice.
+  openLibraryKey String? @unique
+
+  // "reading" | "read" | "want" — "reading" is what draws the bookmark.
+  status     String    @default("read")
+  rating     Int?
+  review     String?
+  reviewedAt DateTime?
+
+  addedAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}

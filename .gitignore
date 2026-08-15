@@ -10,3 +10,8 @@ npm-debug.log*
 next-env.d.ts
 .vercel
 *.tsbuildinfo
+
+# Prisma: generated client is rebuilt by postinstall, the SQLite file is yours
+src/generated
+*.db
+*.db-journal

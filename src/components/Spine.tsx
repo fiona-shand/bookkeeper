@@ -1,8 +1,8 @@
-import type { Book } from "@/lib/books";
+import type { ShelfBook } from "@/lib/queries";
 import { readableInk, spineFontSize, spineGeometry } from "@/lib/spine";
 
 type SpineProps = {
-  book: Book;
+  book: ShelfBook;
   selected: boolean;
   dimmed: boolean;
   onSelect: (id: string) => void;
@@ -11,6 +11,7 @@ type SpineProps = {
 export default function Spine({ book, selected, dimmed, onSelect }: SpineProps) {
   const geometry = spineGeometry(book.pages, book.binding);
   const ink = readableInk(book.color);
+  const reading = book.status === "reading";
 
   return (
     <button
@@ -24,9 +25,15 @@ export default function Spine({ book, selected, dimmed, onSelect }: SpineProps) 
       data-selected={selected}
       data-dimmed={dimmed}
       aria-pressed={selected}
-      aria-label={`${book.title} by ${book.author}`}
+      aria-label={
+        `${book.title} by ${book.author}` +
+        (reading ? " — currently reading" : "")
+      }
       onClick={() => onSelect(book.id)}
     >
+      {/* Silk marker for whatever you're in the middle of. */}
+      {reading ? <span className="bookmark" aria-hidden="true" /> : null}
+
       <span className="spine-face" style={{ color: ink }}>
         <span
           className="spine-band spine-band-top"

@@ -11,6 +11,16 @@ export const GENRES = [
 
 export type Genre = (typeof GENRES)[number];
 
+export const READING_STATUSES = ["reading", "read", "want"] as const;
+
+export type ReadingStatus = (typeof READING_STATUSES)[number];
+
+export const STATUS_LABEL: Record<ReadingStatus, string> = {
+  reading: "Currently reading",
+  read: "Read",
+  want: "Want to read",
+};
+
 export type Book = {
   id: string;
   title: string;
@@ -28,6 +38,8 @@ export type Book = {
   year: number;
   rating: number;
   note: string;
+  /** Defaults to "read" when seeding. "reading" is what draws the bookmark. */
+  status?: ReadingStatus;
 };
 
 export const BOOKS: Book[] = [
@@ -114,6 +126,7 @@ export const BOOKS: Book[] = [
     year: 2022,
     rating: 4,
     note: "Thirty years of making games together, and never once saying it.",
+    status: "reading",
   },
   {
     id: "a-little-life",
@@ -258,6 +271,7 @@ export const BOOKS: Book[] = [
     year: 2011,
     rating: 3,
     note: "Confident about a great many things.",
+    status: "want",
   },
   {
     id: "magical-thinking",
@@ -306,6 +320,7 @@ export const BOOKS: Book[] = [
     year: 2019,
     rating: 4,
     note: "Dragons, on both sides of a very long argument.",
+    status: "reading",
   },
   {
     id: "castle",

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BOOKS } from "@/lib/books";
+import type { ShelfBook } from "@/lib/queries";
 
-export default function Recommend() {
+export default function Recommend({ books }: { books: ShelfBook[] }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [sent, setSent] = useState<string[]>([]);
@@ -18,7 +18,7 @@ export default function Recommend() {
   // Anything already read is worth flagging back to whoever is recommending it.
   const alreadyHere =
     query.length >= 3
-      ? BOOKS.filter(
+      ? books.filter(
           (book) =>
             book.title.toLowerCase().includes(query) ||
             book.author.toLowerCase().includes(query),
