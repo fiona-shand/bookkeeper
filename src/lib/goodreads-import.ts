@@ -68,8 +68,9 @@ export async function importGoodreadsBook(
       pages:
         book.pages ??
         (edition?.pages && edition.pages > 0 ? edition.pages : DEFAULT_PAGES),
-      // The feed doesn't say, and trade paperback is the commonest case.
-      binding: "trade",
+      // The feed never says, so take Open Library's word for it; that's what
+      // stops every imported book being exactly the same height.
+      binding: edition?.binding ?? "trade",
       genre: edition?.genre ?? "Fiction",
       color,
       year: book.year ?? edition?.year ?? null,

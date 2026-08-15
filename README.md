@@ -27,6 +27,9 @@ TypeScript. No `.env` needed — the database defaults to `prisma/dev.db`.
   on the left leaf and a ruled review page on the right.
 - **Bookmarks.** Anything on the "currently reading" shelf gets a silk marker
   showing above its spine.
+- **Filters that actually filter.** Genre and star rating both remove books from
+  the shelf rather than fading them, so what's left closes up side by side.
+  Arrows either side scroll a shelf too long to fit.
 
 ## Why the spines are generated
 
@@ -36,7 +39,7 @@ and ISBNdb all serve front covers only. So the shelf is built from three fields:
 | Field | Drives | Source |
 | --- | --- | --- |
 | `pages` | Spine width, via the bookbinding PPI formula | Open Library, or a Goodreads CSV |
-| `binding` | Spine height, and the shelf's ragged top edge | Defaults to trade paperback |
+| `binding` | Spine height | Open Library's `physical_format` |
 | `color` | Spine fill | `node-vibrant`, sampled from the cover on add |
 
 `src/lib/spine.ts` holds the geometry. Width uses the formula printers use:
@@ -47,7 +50,11 @@ spine width = page count / PPI + cover allowance
 
 Because the maths is real, so are the proportions: a 1,006-page paperback
 renders three times wider than a 272-page one, and hardcovers stand taller than
-mass market. `readableInk()` picks black or cream lettering from each spine's
+mass market. Height comes from the binding, plus a small variation seeded off the book's id
+— two trade paperbacks are never quite the same height, and without that wobble
+a shelf of one binding is a flat line.
+
+`readableInk()` picks black or cream lettering from each spine's
 relative luminance so pale spines stay legible.
 
 Full API research: `docs/bookshelf-api-research.html` — open it in a browser.
@@ -117,6 +124,11 @@ scripts/            offline checks (npm run check)
 ## Notes
 
 - `npm run db:reset` wipes and reseeds. Prisma will ask for confirmation first.
+- `npm run db:backfill` re-looks-up every book on Open Library and fills in
+  binding, missing page counts and missing covers. Run it once if your shelf was
+  imported before bindings were read properly — otherwise every imported book is
+  the same height.
+- Deploying: see `DEPLOY.md`. SQLite cannot work on Vercel.
 - Open Library asks that you identify your app. Put a real contact address in
   `USER_AGENT` in `src/lib/openlibrary.ts` before running this anywhere public.
 - Genre is guessed from Open Library's subjects, which are free-form and messy.
@@ -133,3 +145,5 @@ scripts/            offline checks (npm run check)
 3. **Persist recommendations** — the recommend box is still local state.
 4. **Auth**, before this goes anywhere public. There is none: every Server
    Action is reachable by anyone who can reach the site.
+5. **Accounts and auto-sync** — sign-up so other people get their own shelves,
+   and a Goodreads refresh that runs when the data goes stale.

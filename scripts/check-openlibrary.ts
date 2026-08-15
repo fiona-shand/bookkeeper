@@ -3,6 +3,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { coverUrl, guessGenre, parseSearchResults } from "../src/lib/openlibrary";
+import { bindingFromFormat, spineGeometry } from "../src/lib/spine";
 import { coverColour, FALLBACK_COLOUR } from "../src/lib/colour";
 
 let failures = 0;
@@ -63,6 +64,42 @@ check(
   "specific beats broad",
   guessGenre(["Fiction", "Fantasy fiction"]) === "Fantasy",
 );
+
+console.log("\n— bindingFromFormat —");
+check("hardcover", bindingFromFormat("Hardcover") === "hardcover");
+check("hardback", bindingFromFormat("hardback") === "hardcover");
+check("mass market", bindingFromFormat("Mass Market Paperback") === "massMarket");
+check("paperback is trade", bindingFromFormat("Paperback") === "trade");
+check("unknown format defaults to trade", bindingFromFormat("pbk.") === "trade");
+check("missing format defaults to trade", bindingFromFormat(null) === "trade");
+
+console.log("\n— spineGeometry —");
+{
+  const thin = spineGeometry(120, "trade", "a");
+  const fat = spineGeometry(1000, "trade", "a");
+  check("more pages means a wider spine", fat.width > thin.width * 3, { thin: thin.width, fat: fat.width });
+
+  const hard = spineGeometry(300, "hardcover", "same-seed");
+  const mass = spineGeometry(300, "massMarket", "same-seed");
+  check("hardcovers stand taller than mass market", hard.height > mass.height, { hard: hard.height, mass: mass.height });
+
+  // Individual pairs may round to the same pixel; what matters is that the
+  // shelf as a whole has a ragged top edge rather than one flat line.
+  const heights = Array.from({ length: 60 }, (_, i) =>
+    spineGeometry(300, "trade", `book-${i}`).height,
+  );
+  const distinct = new Set(heights).size;
+  check("same binding still gives a ragged top edge", distinct >= 15, { distinct });
+
+  const min = Math.min(...heights);
+  const max = Math.max(...heights);
+  check("variation stays within a believable range", max - min <= 40, { min, max });
+  check(
+    "same book is the same height every time",
+    spineGeometry(300, "trade", "book-7").height ===
+      spineGeometry(300, "trade", "book-7").height,
+  );
+}
 
 console.log("\n— coverUrl —");
 check(

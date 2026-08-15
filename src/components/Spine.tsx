@@ -4,12 +4,12 @@ import { readableInk, spineFontSize, spineGeometry } from "@/lib/spine";
 type SpineProps = {
   book: ShelfBook;
   selected: boolean;
-  dimmed: boolean;
   onSelect: (id: string) => void;
 };
 
-export default function Spine({ book, selected, dimmed, onSelect }: SpineProps) {
-  const geometry = spineGeometry(book.pages, book.binding);
+export default function Spine({ book, selected, onSelect }: SpineProps) {
+  // Seeded with the id so each book keeps the same slight height variation.
+  const geometry = spineGeometry(book.pages, book.binding, book.id);
   const ink = readableInk(book.color);
   const reading = book.status === "reading";
 
@@ -23,7 +23,6 @@ export default function Spine({ book, selected, dimmed, onSelect }: SpineProps) 
         background: book.color,
       }}
       data-selected={selected}
-      data-dimmed={dimmed}
       aria-pressed={selected}
       aria-label={
         `${book.title} by ${book.author}` +

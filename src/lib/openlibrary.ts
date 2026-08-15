@@ -1,4 +1,5 @@
 import type { Genre } from "./books";
+import { bindingFromFormat, type Binding } from "./spine";
 
 /**
  * Open Library client.
@@ -18,6 +19,7 @@ const SEARCH_FIELDS = [
   "number_of_pages_median",
   "isbn",
   "subject",
+  "physical_format",
 ].join(",");
 
 export type SearchResult = {
@@ -30,6 +32,8 @@ export type SearchResult = {
   coverId: number | null;
   isbn: string | null;
   genre: Genre;
+  /** Drives spine height. Open Library reports this as free text. */
+  binding: Binding;
 };
 
 export function coverUrl(coverId: number, size: "S" | "M" | "L" = "L"): string {
@@ -105,6 +109,7 @@ export function parseSearchResults(payload: unknown): SearchResult[] {
       coverId: finiteNumber(doc.cover_i),
       isbn: firstString(doc.isbn),
       genre: guessGenre(subjects),
+      binding: bindingFromFormat(firstString(doc.physical_format)),
     });
   }
 

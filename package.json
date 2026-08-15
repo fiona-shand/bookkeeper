@@ -10,13 +10,15 @@
     "check": "tsx scripts/check-openlibrary.ts && tsx scripts/check-goodreads.ts && tsx scripts/check-import.ts",
     "postinstall": "prisma generate",
     "db:setup": "prisma migrate deploy && prisma db seed",
-    "db:reset": "prisma migrate reset --force"
+    "db:reset": "prisma migrate reset --force",
+    "db:backfill": "tsx scripts/backfill-editions.ts"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.9.1",
+    "@prisma/adapter-libsql": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "fast-xml-parser": "^5.10.1",
     "next": "16.2.12",

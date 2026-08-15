@@ -87,9 +87,7 @@ export async function addBook(input: {
       // Open Library often has no page count; a sane median keeps the spine
       // from collapsing to the minimum width.
       pages: result.pages && result.pages > 0 ? result.pages : 320,
-      // Search results don't carry binding, and trade paperback is the
-      // commonest case. Change it on the book's own page.
-      binding: "trade",
+      binding: result.binding,
       genre: input.genre,
       color,
       year: result.year,
