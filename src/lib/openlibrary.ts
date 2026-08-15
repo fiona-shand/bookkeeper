@@ -111,6 +111,25 @@ export function parseSearchResults(payload: unknown): SearchResult[] {
   return results;
 }
 
+/**
+ * Used to backfill what a Goodreads feed doesn't carry — chiefly page count,
+ * without which every imported spine would be the same width. Falls back to a
+ * title/author search when the ISBN is missing or unknown to Open Library.
+ */
+export async function lookupEdition(
+  isbn: string | null,
+  title: string,
+  author: string,
+): Promise<SearchResult | null> {
+  if (isbn) {
+    const byIsbn = await searchBooks(`isbn:${isbn}`).catch(() => []);
+    if (byIsbn.length > 0) return byIsbn[0];
+  }
+
+  const byTitle = await searchBooks(`${title} ${author}`).catch(() => []);
+  return byTitle[0] ?? null;
+}
+
 export async function searchBooks(
   query: string,
   signal?: AbortSignal,

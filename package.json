@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "check": "tsx scripts/check-openlibrary.ts && tsx scripts/check-goodreads.ts && tsx scripts/check-import.ts",
     "postinstall": "prisma generate",
     "db:setup": "prisma migrate deploy && prisma db seed",
     "db:reset": "prisma migrate reset --force"
@@ -17,6 +18,7 @@
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "fast-xml-parser": "^5.10.1",
     "next": "16.2.12",
     "node-vibrant": "^4.0.4",
     "prisma": "^7.9.1",

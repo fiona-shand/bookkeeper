@@ -1,4 +1,5 @@
 import AddBook from "@/components/AddBook";
+import ImportGoodreads from "@/components/ImportGoodreads";
 import Library from "@/components/Library";
 import Recommend from "@/components/Recommend";
 import { getShelf } from "@/lib/queries";
@@ -26,6 +27,7 @@ export default async function Page() {
 
         <div className="masthead-actions">
           <AddBook />
+          <ImportGoodreads />
           <Recommend books={books} />
         </div>
       </header>

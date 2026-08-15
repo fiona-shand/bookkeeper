@@ -20,6 +20,8 @@ TypeScript. No `.env` needed — the database defaults to `prisma/dev.db`.
 - **Add books from Open Library.** Search by title or author; author, year, page
   count and cover fill themselves in, and the spine colour is sampled from the
   cover art. No API key required.
+- **Import from Goodreads.** Paste a public profile URL and it pulls in your
+  books with your own ratings and reviews. See the caveats below.
 - **Open a book to review it.** Clicking a spine opens the book — the cover
   swings on its hinge and the two-page spread holds the details and star rating
   on the left leaf and a ruled review page on the right.
@@ -50,6 +52,45 @@ relative luminance so pale spines stay legible.
 
 Full API research: `docs/bookshelf-api-research.html` — open it in a browser.
 
+## Importing from Goodreads
+
+The Goodreads API was retired to new developers in 2020 and has been off since,
+so there is no OAuth "connect" to build. What still works is the RSS feed every
+**public** shelf publishes, and it carries your own ratings, reviews and shelf
+names — which is most of what matters.
+
+Three limits come with that, and none of them can be engineered away:
+
+- **The profile must be public.** A private profile returns an empty feed, not an
+  error, so the importer reports that as "check Settings → Privacy on Goodreads".
+- **100 books per shelf, maximum.** That's the feed's ceiling. When a shelf comes
+  back at exactly 100 the importer says so, because you probably have more. The
+  usual workaround is to split large shelves on Goodreads (`read-2025`,
+  `read-2026`) — this importer reads the three standard shelves only.
+- **Page counts are patchy.** The feed has a `num_pages` field but Goodreads
+  often leaves it blank. Where it's blank, the count is looked up from Open
+  Library by ISBN, which is why importing takes about a third of a second per
+  book. Anything still unknown falls back to 320 pages so the spine isn't a
+  sliver.
+
+Re-importing is safe: books are matched on their Goodreads id and updated rather
+than duplicated, and a book you'd already added by hand is matched on its Open
+Library key and adopted rather than doubled.
+
+## Checks
+
+```bash
+npm run check
+```
+
+Runs 78 assertions over the parts that talk to other people's services —
+Open Library search parsing, colour extraction, Goodreads feed parsing, and the
+import's database behaviour. They use fixtures rather than live calls, so they
+work offline; the import checks write to the database and clean up after
+themselves.
+
+This isn't a full test suite — there's no runner and no component tests.
+
 ## Layout
 
 ```
@@ -65,9 +106,12 @@ src/
   lib/
     spine.ts        spine geometry
     openlibrary.ts  search client + genre guessing
+    goodreads.ts    RSS feed client + parsing
+    goodreads-import.ts  per-book import logic
     colour.ts       cover colour extraction
     queries.ts      shelf reads
     books.ts        seed data
+scripts/            offline checks (npm run check)
 ```
 
 ## Notes
@@ -81,9 +125,11 @@ src/
 
 ## Next steps
 
-1. **Goodreads CSV import** — the export has `Number of Pages`, `Binding` and
-   `ISBN13`, which is everything the renderer needs.
+1. **Goodreads CSV import** — the only way past the 100-book ceiling. The export
+   has `Number of Pages`, `Binding`, `ISBN13` and every book, with no public
+   profile needed. This is the one to build if the RSS import comes up short.
 2. **Edit binding and page count** from the book's own page, so spines can be
    corrected after adding.
 3. **Persist recommendations** — the recommend box is still local state.
-4. **Tests** — there's no test runner wired up yet.
+4. **Auth**, before this goes anywhere public. There is none: every Server
+   Action is reachable by anyone who can reach the site.

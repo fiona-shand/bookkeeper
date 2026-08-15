@@ -24,6 +24,8 @@ model Book {
   coverUrl       String?
   // Open Library work key, so the same book can't be added twice.
   openLibraryKey String? @unique
+  // Goodreads book id, so re-running an import updates rather than duplicates.
+  goodreadsId    String? @unique
 
   // "reading" | "read" | "want" — "reading" is what draws the bookmark.
   status     String    @default("read")
