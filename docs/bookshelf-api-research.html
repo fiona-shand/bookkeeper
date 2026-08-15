@@ -1,0 +1,1147 @@
+<title>Spines, Not Covers</title>
+
+<style>
+  :root {
+    --ground:      #EEF0EA;
+    --surface:     #E3E7DC;
+    --surface-2:   #F8F9F5;
+    --ink:         #191D19;
+    --ink-2:       #4C544C;
+    --ink-3:       #798178;
+    --rule:        #C8CEC2;
+    --rule-soft:   #DBE0D5;
+    --brass:       #7A5C13;
+    --brass-soft:  #A5872F;
+    --good:        #3A6A47;
+    --warn:        #875816;
+    --stop:        #8B3A37;
+    --shadow:      rgba(25,29,25,.16);
+    --shadow-deep: rgba(25,29,25,.28);
+
+    --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+    --mono:  ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+    --measure: 68ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #121512;
+      --surface:     #1A1E1A;
+      --surface-2:   #21251F;
+      --ink:         #E7EAE1;
+      --ink-2:       #A9B1A6;
+      --ink-3:       #7D857C;
+      --rule:        #2D332C;
+      --rule-soft:   #232823;
+      --brass:       #D9B451;
+      --brass-soft:  #B39640;
+      --good:        #77C08D;
+      --warn:        #D3A15B;
+      --stop:        #DE8079;
+      --shadow:      rgba(0,0,0,.5);
+      --shadow-deep: rgba(0,0,0,.7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #121512;
+    --surface:     #1A1E1A;
+    --surface-2:   #21251F;
+    --ink:         #E7EAE1;
+    --ink-2:       #A9B1A6;
+    --ink-3:       #7D857C;
+    --rule:        #2D332C;
+    --rule-soft:   #232823;
+    --brass:       #D9B451;
+    --brass-soft:  #B39640;
+    --good:        #77C08D;
+    --warn:        #D3A15B;
+    --stop:        #DE8079;
+    --shadow:      rgba(0,0,0,.5);
+    --shadow-deep: rgba(0,0,0,.7);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.62;
+    margin: 0;
+    padding: 0 1.25rem 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 72rem;
+    margin: 0 auto;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 4.5rem 0 2.5rem;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-width: var(--measure);
+  }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 0;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.6rem, 7vw, 4.1rem);
+    line-height: 1.02;
+    letter-spacing: -.022em;
+    font-weight: 600;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 1.2rem;
+    line-height: 1.55;
+    color: var(--ink-2);
+    margin: 0;
+    max-width: 56ch;
+  }
+
+  .standfirst em { color: var(--ink); font-style: italic; }
+
+  /* ---------- shelf demo ---------- */
+
+  .demo {
+    margin: 3rem 0 4rem;
+  }
+
+  .demo-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .75rem 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .demo-head p {
+    margin: 0;
+    font-size: .95rem;
+    color: var(--ink-3);
+    max-width: 52ch;
+  }
+
+  .shelf-scroll {
+    overflow-x: auto;
+    padding: 1.5rem 0 .5rem;
+  }
+
+  .shelf {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    min-height: 330px;
+    padding: 0 1.5rem;
+    width: max-content;
+    min-width: 100%;
+    justify-content: center;
+  }
+
+  .book {
+    position: relative;
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    border-radius: 1px 3px 3px 1px;
+    cursor: pointer;
+    font-family: var(--serif);
+    transform-origin: bottom center;
+    transition: transform .28s cubic-bezier(.22,.9,.3,1), box-shadow .28s ease;
+    box-shadow:
+      0 2px 5px var(--shadow),
+      inset 0 0 0 1px rgba(0,0,0,.14);
+  }
+
+  .book:hover,
+  .book:focus-visible {
+    transform: translateY(-16px);
+    box-shadow: 0 12px 22px var(--shadow-deep), inset 0 0 0 1px rgba(0,0,0,.14);
+  }
+
+  .book:focus-visible {
+    outline: 2px solid var(--brass);
+    outline-offset: 3px;
+  }
+
+  .book[aria-pressed="true"] {
+    transform: translateY(-16px);
+    box-shadow: 0 12px 22px var(--shadow-deep), inset 0 0 0 1px rgba(0,0,0,.14);
+  }
+
+  .book-face {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 0;
+    border-radius: inherit;
+    /* the cylindrical curve of a real spine */
+    background-image: linear-gradient(
+      to right,
+      rgba(0,0,0,.34) 0%,
+      rgba(255,255,255,.13) 16%,
+      rgba(255,255,255,.05) 46%,
+      rgba(0,0,0,.10) 78%,
+      rgba(0,0,0,.34) 100%
+    );
+  }
+
+  .book-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 100%;
+    display: flex;
+    align-items: center;
+    gap: .9em;
+    letter-spacing: .015em;
+  }
+
+  .book-title { font-weight: 600; }
+  .book-author { font-size: .82em; opacity: .72; }
+
+  .band {
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    opacity: .38;
+  }
+  .band-top { top: 9%; }
+  .band-bottom { bottom: 9%; }
+
+  .board {
+    height: 13px;
+    margin: 0 .75rem;
+    border-radius: 0 0 3px 3px;
+    background-image: linear-gradient(
+      to bottom,
+      var(--brass-soft) 0%,
+      var(--brass) 40%,
+      rgba(0,0,0,.42) 100%
+    );
+    box-shadow: 0 10px 22px -8px var(--shadow-deep);
+  }
+
+  /* ---------- readout ---------- */
+
+  .readout {
+    margin-top: 2rem;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 1.25rem 1.4rem;
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: minmax(13rem, 1fr) minmax(0, 2fr);
+  }
+
+  @media (max-width: 40rem) {
+    .readout { grid-template-columns: 1fr; }
+  }
+
+  .readout-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0 0 .2rem;
+  }
+
+  .readout-author {
+    font-size: .9rem;
+    color: var(--ink-3);
+    margin: 0;
+  }
+
+  .specs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    gap: .7rem 1.25rem;
+    margin: 0;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .specs div { display: flex; flex-direction: column; gap: .12rem; }
+
+  .specs dt {
+    font-size: .63rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .specs dd {
+    margin: 0;
+    font-size: .84rem;
+    color: var(--ink);
+  }
+
+  .swatch {
+    display: inline-block;
+    width: .72em;
+    height: .72em;
+    border-radius: 2px;
+    margin-right: .4em;
+    vertical-align: -.02em;
+    border: 1px solid var(--rule);
+  }
+
+  /* ---------- sections ---------- */
+
+  section {
+    padding-top: 3.75rem;
+    scroll-margin-top: 2rem;
+  }
+
+  .layer {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr);
+    gap: 0 1.5rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .plain {
+    max-width: var(--measure);
+    border-top: 1px solid var(--rule);
+  }
+
+  .layer-mark {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--brass);
+    padding-top: 3.85rem;
+  }
+
+  .layer-mark span {
+    display: block;
+    border-left: 2px solid var(--brass);
+    padding-left: .6rem;
+    line-height: 1.5;
+  }
+
+  .layer-body { max-width: var(--measure); padding-top: 3.5rem; }
+
+  @media (max-width: 46rem) {
+    .layer { grid-template-columns: 1fr; }
+    .layer-mark { padding-top: 3.5rem; }
+    .layer-mark span { border-left: 0; border-top: 2px solid var(--brass); padding-left: 0; padding-top: .5rem; }
+    .layer-body { padding-top: 1rem; }
+  }
+
+  h2 {
+    font-size: clamp(1.6rem, 3.6vw, 2.15rem);
+    line-height: 1.14;
+    letter-spacing: -.015em;
+    font-weight: 600;
+    margin: 0 0 1rem;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-size: 1.12rem;
+    font-weight: 600;
+    letter-spacing: -.005em;
+    margin: 2.25rem 0 .6rem;
+  }
+
+  h4 {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 1.75rem 0 .55rem;
+    font-weight: 500;
+  }
+
+  p { margin: 0 0 1.05rem; }
+  p:last-child { margin-bottom: 0; }
+
+  a { color: var(--ink); text-decoration-color: var(--brass); text-underline-offset: .18em; }
+  a:hover { color: var(--brass); }
+
+  strong { font-weight: 600; }
+
+  code {
+    font-family: var(--mono);
+    font-size: .84em;
+    background: var(--surface);
+    padding: .1em .35em;
+    border-radius: 2px;
+    word-break: break-word;
+  }
+
+  pre {
+    font-family: var(--mono);
+    font-size: .78rem;
+    line-height: 1.62;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-left: 2px solid var(--brass);
+    border-radius: 2px;
+    padding: 1.1rem 1.25rem;
+    overflow-x: auto;
+    margin: 1.25rem 0;
+  }
+
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  .cm { color: var(--ink-3); }
+
+  ul, ol { margin: 0 0 1.05rem; padding-left: 1.3rem; }
+  li { margin-bottom: .5rem; }
+  li:last-child { margin-bottom: 0; }
+
+  /* ---------- verdict callout ---------- */
+
+  .verdict {
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--brass);
+    border-radius: 2px;
+    padding: 1.4rem 1.5rem;
+    margin: 1.75rem 0;
+  }
+
+  .verdict p:first-child { margin-top: 0; }
+
+  .verdict-label {
+    font-family: var(--mono);
+    font-size: .65rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--brass);
+    display: block;
+    margin-bottom: .5rem;
+  }
+
+  /* ---------- table ---------- */
+
+  .table-scroll {
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 46rem;
+    font-size: .87rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: .78rem .95rem;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+  }
+
+  thead th {
+    font-family: var(--mono);
+    font-size: .63rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 500;
+    background: var(--surface);
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+
+  tbody tr:last-child td { border-bottom: 0; }
+
+  td.name { font-weight: 600; white-space: nowrap; }
+  td.data { font-family: var(--mono); font-size: .78rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: .62rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .18em .5em;
+    border-radius: 2px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+  }
+  .pill-free { color: var(--good); }
+  .pill-paid { color: var(--warn); }
+  .pill-dead { color: var(--stop); }
+
+  /* ---------- approach cards ---------- */
+
+  .approaches {
+    display: grid;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  }
+
+  .approach {
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 1.1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+
+  .approach.pick { border-color: var(--brass); box-shadow: inset 0 0 0 1px var(--brass); }
+
+  .approach h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .approach p { font-size: .88rem; color: var(--ink-2); margin: 0; }
+
+  .approach .tag {
+    font-family: var(--mono);
+    font-size: .6rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .approach.pick .tag { color: var(--brass); }
+
+  /* ---------- footer ---------- */
+
+  .sources { font-size: .88rem; }
+  .sources li { margin-bottom: .4rem; }
+
+  .colophon {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .04em;
+    color: var(--ink-3);
+    max-width: var(--measure);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Research · Bookshelf reading tracker</p>
+    <h1>Spines, not covers</h1>
+    <p class="standfirst">
+      Every book API on the open web returns the <em>front cover</em>. Not one of them
+      returns a spine. The shelf in your screenshot can't be fetched — it has to be
+      generated, from page counts and cover colours. That single fact decides the
+      whole architecture.
+    </p>
+  </header>
+
+  <div class="demo">
+    <div class="demo-head">
+      <p>
+        Below is that generation, running. Every spine is drawn from two numbers a free API
+        will give you — page count and binding — plus one colour sampled from the cover art.
+        Click a book to see the maths behind its width.
+      </p>
+    </div>
+
+    <div class="shelf-scroll">
+      <div class="shelf" id="shelf" role="group" aria-label="Generated bookshelf demonstration"></div>
+    </div>
+    <div class="board"></div>
+
+    <div class="readout" id="readout"></div>
+  </div>
+
+  <section class="plain">
+    <h2>The constraint everything hangs off</h2>
+    <p>
+      I checked the four sources that matter — Open Library, Google Books, Hardcover and
+      ISBNdb. All four serve cover images. None serves a spine image, and there is no
+      general-purpose spine API anywhere: the only spine-specific work in the field is
+      computer-vision research on <em>recognising</em> spines in shelf photographs, and a
+      Xerox patent on synthesising spines for print. Nothing you can call.
+    </p>
+    <div class="verdict">
+      <span class="verdict-label">What this means</span>
+      <p>
+        Your app is not a book-data app with a shelf skin on top. It's a
+        <strong>spine-rendering app</strong> that happens to fetch metadata. The interesting
+        engineering is local: derive spine geometry from page count, derive spine colour from
+        the cover, typeset the title vertically. The APIs are the easy, solved half.
+      </p>
+    </div>
+    <p>
+      The good news is that the two inputs you need are in the cheapest tier of every source,
+      and they're both already in a Goodreads CSV export — so you can build the entire shelf
+      offline before you ever wire up a network call.
+    </p>
+  </section>
+
+  <section class="layer">
+    <div class="layer-mark"><span>Layer 1<br>Metadata</span></div>
+    <div class="layer-body">
+      <h2>Search and metadata</h2>
+      <p>
+        This is the "what book is this" layer: the user types <em>piranesi</em>, you resolve it
+        to a title, author, ISBN, page count and binding. Four real options, one obvious default.
+      </p>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Cost</th>
+              <th>Auth</th>
+              <th>Limits</th>
+              <th>Strongest at</th>
+              <th>Catch</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="name">Open Library</td>
+              <td><span class="pill pill-free">Free</span></td>
+              <td class="data">None</td>
+              <td class="data">~1 rps anon<br>~3 rps identified</td>
+              <td>Default choice. CC0 data, no key, covers on the same domain, page counts on editions.</td>
+              <td>Community-edited, so record quality is uneven. Sparse on new releases.</td>
+            </tr>
+            <tr>
+              <td class="name">Google Books</td>
+              <td><span class="pill pill-free">Free</span></td>
+              <td class="data">API key</td>
+              <td class="data">1,000/day default<br>raise on request</td>
+              <td>Search relevance. Fuzzy, half-remembered titles resolve far better here.</td>
+              <td>ToS wants attribution and a link back to the Google Books page; no charging users.</td>
+            </tr>
+            <tr>
+              <td class="name">Hardcover</td>
+              <td><span class="pill pill-free">Free</span></td>
+              <td class="data">Bearer token</td>
+              <td class="data">60 req/min<br>30 s timeout</td>
+              <td>The Goodreads-shaped one: reading status, lists, ratings, high-res covers, one GraphQL endpoint.</td>
+              <td>Smaller catalogue. Token is tied to your personal account.</td>
+            </tr>
+            <tr>
+              <td class="name">ISBNdb</td>
+              <td><span class="pill pill-paid">Paid</span></td>
+              <td class="data">API key</td>
+              <td class="data">1–5 rps by tier</td>
+              <td>Catalogue completeness: 100M+ titles, physical attributes, bulk lookup.</td>
+              <td>From ~$15/mo up to $300/mo. Unjustifiable for a personal shelf.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Verified while researching this</h4>
+      <p>
+        Google Books without an API key falls back to a quota shared across everyone on your IP.
+        I called it from this machine and got a flat <code>429 RESOURCE_EXHAUSTED</code> —
+        someone else had already spent the day's allowance. Anonymous calls will work on your
+        laptop right up until they don't. Get a key on day one; it's free.
+      </p>
+
+      <h4>Dead ends, so you don't lose an evening</h4>
+      <ul>
+        <li>
+          <strong>The Goodreads API is gone.</strong> Retired to new developers in late 2020 and
+          switched off since. Every tutorial you'll find for it is dead. This is exactly why
+          Hardcover exists.
+        </li>
+        <li>
+          <strong>Amazon Product Advertising API</strong> has real cover art but requires an
+          Associates account with qualifying sales before it will issue credentials. Not viable
+          for a personal project.
+        </li>
+        <li>
+          <strong>StoryGraph has no public API.</strong> CSV export only.
+        </li>
+      </ul>
+
+      <div class="verdict">
+        <span class="verdict-label">Recommendation</span>
+        <p>
+          <strong>Open Library as the spine of the system, Google Books as the search box.</strong>
+          Query Google when the user is typing (its relevance is worth the key), then store the
+          ISBN and read everything else — covers, page counts, editions — from Open Library, which
+          has no key, no quota anxiety and CC0 data you're allowed to keep. Add Hardcover later
+          only if you want the social layer.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="layer">
+    <div class="layer-mark"><span>Layer 2<br>Covers</span></div>
+    <div class="layer-body">
+      <h2>Getting the cover image</h2>
+      <p>
+        You need covers for two reasons: the front face when a book is pulled off the shelf, and —
+        more importantly — as the source of the spine's colour.
+      </p>
+
+      <h4>Open Library Covers</h4>
+      <p>
+        No key, no signup, and it accepts the identifier you already have. The pattern is
+        <code>https://covers.openlibrary.org/b/$key/$value-$size.jpg</code>, where key is one of
+        <code>isbn</code>, <code>oclc</code>, <code>lccn</code>, <code>olid</code> or
+        <code>id</code>, and size is <code>S</code>, <code>M</code> or <code>L</code>.
+      </p>
+<pre><code>https://covers.openlibrary.org/b/isbn/9781635575637-L.jpg
+
+<span class="cm">// ?default=false returns 404 instead of a blank placeholder —</span>
+<span class="cm">// essential, or you cannot tell "no cover" from "grey cover"</span>
+https://covers.openlibrary.org/b/isbn/9781635575637-L.jpg?default=false
+
+<span class="cm">// append .json for cover metadata rather than the image</span>
+https://covers.openlibrary.org/b/id/12547191.json</code></pre>
+      <p>
+        Two rules worth respecting: send a <code>User-Agent</code> with your app name and an
+        email — it triples your rate limit from roughly 1 to 3 requests a second — and don't
+        crawl. They will block bulk harvesting. Fetch a cover once, on add, and cache it.
+      </p>
+
+      <h4>Google Books images</h4>
+      <p>
+        Covers arrive in the volume's <code>imageLinks</code> object
+        (<code>smallThumbnail</code> through <code>extraLarge</code>, depending on the volume).
+        Two practical fixes: the URLs come back as <code>http</code> so rewrite them to
+        <code>https</code> or they'll be blocked as mixed content, and stripping the
+        <code>&amp;edge=curl</code> parameter removes the fake page-curl graphic Google
+        overlays on the corner.
+      </p>
+
+      <div class="verdict">
+        <span class="verdict-label">Do this once, not per render</span>
+        <p>
+          Download the cover when a book is added, store it locally, and extract its colour in
+          the same pass. Rate limits make on-the-fly fetching fragile, and a shelf of 300 books
+          would fire 300 requests on every page load.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="layer">
+    <div class="layer-mark"><span>Layer 3<br>Spines</span></div>
+    <div class="layer-body">
+      <h2>Synthesising the spine</h2>
+      <p>
+        This is the part with no API behind it, and it's where the project is won or lost.
+        Three approaches, in ascending order of how good they look.
+      </p>
+
+      <div class="approaches">
+        <div class="approach">
+          <span class="tag">Approach A</span>
+          <h5>Squash the cover</h5>
+          <p>
+            Scale the front cover into a narrow strip. Ten minutes of work, and it looks wrong
+            immediately — cover art is composed for a 2:3 rectangle, so titles smear into
+            illegible bands. Every shelf that looks cheap did this.
+          </p>
+        </div>
+        <div class="approach pick">
+          <span class="tag">Approach B · recommended</span>
+          <h5>Generate from colour + type</h5>
+          <p>
+            Fill with a colour sampled from the cover, add a left-to-right gradient to fake the
+            spine's curve, and typeset title and author vertically. Reads like a real shelf at
+            any zoom, and every input is free.
+          </p>
+        </div>
+        <div class="approach">
+          <span class="tag">Approach C</span>
+          <h5>B, in CSS 3D</h5>
+          <p>
+            Same spine as a face of a <code>preserve-3d</code> box, with the real cover as the
+            front face. Pulling a book out rotates it to show the cover. Best UX, and a natural
+            phase two once B works.
+          </p>
+        </div>
+      </div>
+
+      <h3>Spine width is real bookbinding maths</h3>
+      <p>
+        Printers calculate spine width as page count divided by <strong>PPI</strong> (pages per
+        inch — how many printed pages stack to an inch), plus an allowance for the cover itself.
+        Use the same formula and the variation across your shelf comes out physically correct:
+        a 700-page paperback genuinely is three times the width of a 250-page one.
+      </p>
+<pre><code><span class="cm">// PPI varies by paper stock; these are sane averages.</span>
+<span class="cm">// Allowance covers glue and cover stock — or boards, for hardcovers.</span>
+const BINDING = {
+  hardcover:  { ppi: 440, allowance: 0.25, heightIn: 9.25 },
+  trade:      { ppi: 500, allowance: 0.06, heightIn: 8.00 },
+  massMarket: { ppi: 560, allowance: 0.05, heightIn: 6.75 },
+};
+
+const PX_PER_INCH = 34;
+
+function spineGeometry(pages, binding = "trade") {
+  const b = BINDING[binding] ?? BINDING.trade;
+  const inches = pages / b.ppi + b.allowance;
+  return {
+    inches,
+    width:  Math.max(14, Math.round(inches * PX_PER_INCH)),
+    height: Math.round(b.heightIn * PX_PER_INCH),
+  };
+}</code></pre>
+      <p>
+        Height matters as much as width. Driving it off binding gives you a ragged top edge
+        across the shelf, which is most of what makes the screenshot read as a
+        <em>photograph</em> of books rather than a bar chart. Open Library exposes
+        <code>physical_format</code> on editions; a Goodreads CSV has the same thing in its
+        <code>Binding</code> column.
+      </p>
+
+      <h3>Colour, extracted once at import</h3>
+      <p>
+        Run the cover through <code>node-vibrant</code> or <code>colorthief</code> server-side
+        when the book is added, and store the hex on the row. Vibrant is the better fit here
+        because it returns semantically labelled swatches — <code>DarkVibrant</code> is
+        usually the closest match to a real spine, since publishers darken spine stock relative
+        to cover art. Then pick your text colour by luminance so light spines get dark type:
+      </p>
+<pre><code>function readableInk(hex) {
+  const srgb = [1, 3, 5]
+    .map(i =&gt; parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map(c =&gt; (c &lt;= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  const L = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+  return L &gt; 0.42 ? "#1A1A17" : "#F4F1E8";
+}</code></pre>
+
+      <h3>The two details that sell it</h3>
+      <p>
+        First, the curve. A flat rectangle of colour reads as a UI element; a spine catches
+        light down its rounded face. One gradient does the whole job — dark at both edges,
+        bright just inside the left one:
+      </p>
+<pre><code>background-image: linear-gradient(to right,
+  rgba(0,0,0,.34)      0%,
+  rgba(255,255,255,.13) 16%,
+  rgba(255,255,255,.05) 46%,
+  rgba(0,0,0,.10)      78%,
+  rgba(0,0,0,.34)     100%);</code></pre>
+      <p>
+        Second, the type. <code>writing-mode: vertical-rl</code> gives you the top-to-bottom
+        reading direction used on British and American spines — worth knowing that most
+        European spines read bottom-to-top, so this is a real choice rather than a default.
+        Add <code>white-space: nowrap</code> with <code>text-overflow: ellipsis</code> and long
+        titles truncate gracefully instead of wrapping into a mess.
+      </p>
+      <p>
+        Everything above is what's rendering at the top of this page — same formula, same
+        gradient, same luminance test.
+      </p>
+    </div>
+  </section>
+
+  <section class="layer">
+    <div class="layer-mark"><span>Layer 4<br>Import</span></div>
+    <div class="layer-body">
+      <h2>Filling the shelf on day one</h2>
+      <p>
+        An empty bookshelf is a bad first run, and nobody adds 200 books by hand. The Goodreads
+        CSV export is the standard migration path, and it happens to contain precisely the
+        fields the spine renderer needs.
+      </p>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>CSV column</th><th>Becomes</th><th>Why it matters</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="data">Title, Author</td><td>Spine typography</td><td>The text on the spine.</td></tr>
+            <tr><td class="data">Number of Pages</td><td>Spine width</td><td>Straight into the PPI formula.</td></tr>
+            <tr><td class="data">Binding</td><td>Spine height + PPI</td><td>Gives you the ragged shelf edge.</td></tr>
+            <tr><td class="data">ISBN13</td><td>Cover lookup key</td><td>Feeds the Open Library covers URL.</td></tr>
+            <tr><td class="data">Exclusive Shelf</td><td>Which shelf</td><td><code>read</code> / <code>currently-reading</code> / <code>to-read</code>.</td></tr>
+            <tr><td class="data">Bookshelves</td><td>Custom shelves</td><td>User's own tags, comma-separated.</td></tr>
+            <tr><td class="data">My Rating, My Review</td><td>Detail view</td><td>What the book page shows when pulled out.</td></tr>
+            <tr><td class="data">Date Read, Date Added</td><td>Sort + stats</td><td>Chronological shelves, year-in-review.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        One quirk to handle: Goodreads writes ISBNs as <code>="9780385474542"</code> — an Excel
+        formula wrapper — so strip <code>="</code> and <code>"</code> before lookup. Rows are
+        also frequently missing ISBNs entirely, which is your cue to fall back to a title +
+        author search rather than dropping the book.
+      </p>
+      <p>
+        StoryGraph exports a similar CSV, and Hardcover can hand you a user's whole library
+        over GraphQL if you'd rather sync than import.
+      </p>
+    </div>
+  </section>
+
+  <section class="plain">
+    <h2>Terms worth reading before you scale</h2>
+    <p>
+      None of this blocks a personal project, but the constraints differ enough to matter if it
+      ever goes public.
+    </p>
+    <ul>
+      <li>
+        <strong>Open Library</strong> — data is CC0, so you can store and reuse it freely. Covers
+        come from mixed sources and carry no blanket licence, so treat caching them as fine for
+        personal use and get advice before building a business on it. Don't crawl.
+      </li>
+      <li>
+        <strong>Google Books</strong> — the ToS asks for visible Google attribution and a link
+        from each result to its Google Books page, and forbids charging users for an app built
+        on the API without written permission. Fine for a personal shelf; a real constraint on a
+        paid product.
+      </li>
+      <li>
+        <strong>Hardcover</strong> — free and generous, but the token is personal. Send a
+        descriptive <code>User-Agent</code>, as their docs ask.
+      </li>
+      <li>
+        <strong>Cover art is publisher copyright</strong> regardless of who serves it. Displaying
+        it for a book you're cataloguing is standard practice across every reading app; wholesale
+        redistribution is not.
+      </li>
+    </ul>
+  </section>
+
+  <section class="plain">
+    <h2>What I'd build</h2>
+    <p>
+      You already have the stack for this in muscle memory — the tracker in this repo is
+      Next.js and Prisma, and it transfers directly. SQLite locally, one <code>Book</code>
+      table, covers cached to disk.
+    </p>
+    <p>
+      The sequencing that de-risks it: <strong>start at layer 3, not layer 1.</strong> Hand-write
+      a JSON array of fifteen books with page counts and hex colours, and get the shelf looking
+      right. That's the part that decides whether the project is worth finishing, it needs no
+      API key, no network and no database, and if the shelf looks good with fake data it will
+      look good with real data. The demo at the top of this page is roughly that milestone, and
+      it's an afternoon's work.
+    </p>
+    <p>
+      Then import a Goodreads CSV to fill it, and only then add live search against Google Books
+      and covers from Open Library. Colour extraction with Vibrant is the last step — until it's
+      in, a hand-picked palette per book works fine, and honestly sometimes looks better.
+    </p>
+  </section>
+
+  <section class="plain">
+    <h2>Sources</h2>
+    <ul class="sources">
+      <li><a href="https://openlibrary.org/dev/docs/api/covers">Open Library Covers API</a> — URL patterns, sizes, rate limits</li>
+      <li><a href="https://openlibrary.org/developers/api">Open Library APIs overview</a> — search, books, editions</li>
+      <li><a href="https://docs.hardcover.app/api/getting-started/">Hardcover API — Getting Started</a> — tokens, GraphQL endpoint, 60 req/min</li>
+      <li><a href="https://www.emgoto.com/hardcover-book-api/">Hardcover's Book API: a Goodreads API alternative</a></li>
+      <li><a href="https://developers.google.com/books/docs/v1/using">Google Books API — Using the API</a> and <a href="https://developers.google.com/books/terms">Terms of Service</a></li>
+      <li><a href="https://isbndb.com/isbn-database">ISBNdb pricing</a> and <a href="https://isbndb.com/blog/book-api/">Top book APIs, 2026</a></li>
+      <li><a href="https://www.bookmobile.com/art-book-printing/calculating-spine-width-and-book-weight-before-your-book-is-printed/">Bookmobile — calculating spine width</a> and <a href="https://printninja.com/spine-width-calculator/">PrintNinja spine width calculator</a> — the PPI formula</li>
+      <li><a href="https://github.com/Vibrant-Colors/node-vibrant">node-vibrant</a> and <a href="https://github.com/lokesh/color-thief">color-thief</a> — palette extraction</li>
+      <li><a href="https://patents.google.com/patent/US8131009">US8131009 — automatic spine creation from book covers</a> — prior art on synthesising spines</li>
+      <li><a href="https://github.com/petargyurov/virtual-bookshelf">petargyurov/virtual-bookshelf</a> and <a href="https://github.com/cfritsch5/shelffaux">shelffaux</a> — CSS shelf implementations to crib from</li>
+    </ul>
+  </section>
+
+  <p class="colophon">
+    Demo shelf uses representative page counts and hand-picked cover colours for well-known
+    editions; in the real thing both come from the API and the cover image. Spine geometry is
+    computed live from the formula above.
+  </p>
+
+</div>
+
+<script>
+  const BINDING = {
+    hardcover:  { ppi: 440, allowance: 0.25, heightIn: 9.25, label: "Hardcover" },
+    trade:      { ppi: 500, allowance: 0.06, heightIn: 8.00, label: "Trade paperback" },
+    massMarket: { ppi: 560, allowance: 0.05, heightIn: 6.75, label: "Mass market" },
+  };
+
+  const PX_PER_INCH = 34;
+
+  const BOOKS = [
+    { title: "Piranesi", author: "Susanna Clarke", pages: 272, binding: "trade", color: "#1F5C63" },
+    { title: "The Secret History", author: "Donna Tartt", pages: 559, binding: "trade", color: "#16281D" },
+    { title: "Normal People", author: "Sally Rooney", pages: 266, binding: "trade", color: "#8FB6CE" },
+    { title: "Circe", author: "Madeline Miller", pages: 393, binding: "hardcover", color: "#C2622A" },
+    { title: "Klara and the Sun", author: "Kazuo Ishiguro", pages: 303, binding: "hardcover", color: "#E4C85B" },
+    { title: "The Song of Achilles", author: "Madeline Miller", pages: 352, binding: "trade", color: "#23406E" },
+    { title: "Tomorrow, and Tomorrow, and Tomorrow", author: "Gabrielle Zevin", pages: 401, binding: "hardcover", color: "#2A3A7C" },
+    { title: "A Little Life", author: "Hanya Yanagihara", pages: 720, binding: "trade", color: "#6E6A62" },
+    { title: "Beloved", author: "Toni Morrison", pages: 324, binding: "trade", color: "#8E2B26" },
+    { title: "Wolf Hall", author: "Hilary Mantel", pages: 653, binding: "trade", color: "#191712" },
+    { title: "The Idiot", author: "Elif Batuman", pages: 423, binding: "trade", color: "#E8DCC2" },
+    { title: "Educated", author: "Tara Westover", pages: 352, binding: "hardcover", color: "#B8CBD6" },
+    { title: "Bunny", author: "Mona Awad", pages: 305, binding: "trade", color: "#D96FA0" },
+    { title: "Never Let Me Go", author: "Kazuo Ishiguro", pages: 288, binding: "massMarket", color: "#2E7A72" },
+  ];
+
+  function spineGeometry(pages, binding) {
+    const b = BINDING[binding] ?? BINDING.trade;
+    const inches = pages / b.ppi + b.allowance;
+    return {
+      inches,
+      width: Math.max(14, Math.round(inches * PX_PER_INCH)),
+      height: Math.round(b.heightIn * PX_PER_INCH),
+    };
+  }
+
+  function readableInk(hex) {
+    const srgb = [1, 3, 5]
+      .map(i => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map(c => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+    const L = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+    return L > 0.42 ? "#1A1A17" : "#F4F1E8";
+  }
+
+  const shelf = document.getElementById("shelf");
+  const readout = document.getElementById("readout");
+  const buttons = [];
+
+  BOOKS.forEach((book, i) => {
+    const geo = spineGeometry(book.pages, book.binding);
+    const ink = readableInk(book.color);
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "book";
+    btn.style.width = geo.width + "px";
+    btn.style.height = geo.height + "px";
+    btn.style.background = book.color;
+    btn.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+    btn.setAttribute("aria-label", book.title + " by " + book.author);
+
+    const face = document.createElement("span");
+    face.className = "book-face";
+    face.style.color = ink;
+
+    const bandTop = document.createElement("span");
+    bandTop.className = "band band-top";
+    bandTop.style.background = ink;
+    const bandBottom = document.createElement("span");
+    bandBottom.className = "band band-bottom";
+    bandBottom.style.background = ink;
+
+    const text = document.createElement("span");
+    text.className = "book-text";
+    text.style.fontSize = geo.width >= 34 ? "12px" : geo.width >= 24 ? "11px" : "9.5px";
+
+    const title = document.createElement("span");
+    title.className = "book-title";
+    title.textContent = book.title;
+    text.appendChild(title);
+
+    if (geo.width >= 26) {
+      const author = document.createElement("span");
+      author.className = "book-author";
+      author.textContent = book.author;
+      text.appendChild(author);
+    }
+
+    face.appendChild(bandTop);
+    face.appendChild(text);
+    face.appendChild(bandBottom);
+    btn.appendChild(face);
+
+    btn.addEventListener("click", () => select(i));
+    shelf.appendChild(btn);
+    buttons.push(btn);
+  });
+
+  function select(index) {
+    buttons.forEach((b, i) => b.setAttribute("aria-pressed", i === index ? "true" : "false"));
+    render(index);
+  }
+
+  function render(index) {
+    const book = BOOKS[index];
+    const b = BINDING[book.binding] ?? BINDING.trade;
+    const geo = spineGeometry(book.pages, book.binding);
+    const ink = readableInk(book.color);
+
+    readout.innerHTML = "";
+
+    const head = document.createElement("div");
+    const h = document.createElement("p");
+    h.className = "readout-title";
+    h.textContent = book.title;
+    const a = document.createElement("p");
+    a.className = "readout-author";
+    a.textContent = book.author + " · " + b.label;
+    head.appendChild(h);
+    head.appendChild(a);
+
+    const specs = document.createElement("dl");
+    specs.className = "specs";
+
+    const rows = [
+      ["Pages", String(book.pages)],
+      ["PPI", String(b.ppi)],
+      ["Allowance", b.allowance.toFixed(2) + " in"],
+      ["Spine width", geo.inches.toFixed(3) + " in"],
+      ["Rendered", geo.width + " × " + geo.height + " px"],
+      ["Cover colour", book.color.toUpperCase(), book.color],
+      ["Spine ink", ink.toUpperCase(), ink],
+    ];
+
+    rows.forEach(([label, value, swatch]) => {
+      const wrap = document.createElement("div");
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+      const dd = document.createElement("dd");
+      if (swatch) {
+        const sw = document.createElement("span");
+        sw.className = "swatch";
+        sw.style.background = swatch;
+        dd.appendChild(sw);
+      }
+      dd.appendChild(document.createTextNode(value));
+      wrap.appendChild(dt);
+      wrap.appendChild(dd);
+      specs.appendChild(wrap);
+    });
+
+    readout.appendChild(head);
+    readout.appendChild(specs);
+  }
+
+  render(0);
+</script>
