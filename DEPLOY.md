@@ -65,12 +65,14 @@ the same SQL either way, so nothing can drift silently.
 
 ## Before you share the URL
 
-**There is no authentication.** Every Server Action is callable by anyone who
-can reach the site, so a stranger could add, edit or delete your books. On
-localhost that doesn't matter. On a public URL it does.
+Accounts now exist: every shelf is private to its owner, and every Server Action
+checks the session before touching a row. **The first account created on the
+deployed site adopts any unclaimed books**, so sign up yourself immediately
+after deploying — before anyone else can.
 
-Sign-in is the next thing to build. Until it exists, treat the deployed site as
-public and writable.
+Still missing: email verification, password reset, and rate limiting on sign-in.
+Anyone can create an account, which is intended, but there's nothing yet slowing
+down someone guessing at passwords.
 
 Two smaller things:
 

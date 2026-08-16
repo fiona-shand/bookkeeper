@@ -47,7 +47,10 @@ function toShelfBook(row: BookRow): ShelfBook {
   };
 }
 
-export async function getShelf(): Promise<ShelfBook[]> {
-  const rows = await prisma.book.findMany({ orderBy: { addedAt: "asc" } });
+export async function getShelf(userId: string): Promise<ShelfBook[]> {
+  const rows = await prisma.book.findMany({
+    where: { userId },
+    orderBy: { addedAt: "asc" },
+  });
   return rows.map(toShelfBook);
 }

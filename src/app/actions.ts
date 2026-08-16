@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireUser } from "@/lib/auth";
 import { GENRES, READING_STATUSES, type Genre, type ReadingStatus } from "@/lib/books";
 import { coverColour, FALLBACK_COLOUR } from "@/lib/colour";
 import { prisma } from "@/lib/db";
@@ -38,11 +39,16 @@ export async function saveReview(input: {
   const review = input.review.trim();
   const rating = normaliseRating(input.rating);
 
-  const existing = await prisma.book.findUnique({ where: { id: input.id } });
+  const user = await requireUser();
+
+  // Scoped by userId, so this can't be pointed at someone else's book by id.
+  const existing = await prisma.book.findFirst({
+    where: { id: input.id, userId: user.id },
+  });
   if (!existing) return { ok: false, error: "That book is no longer on the shelf." };
 
   await prisma.book.update({
-    where: { id: input.id },
+    where: { id: existing.id },
     data: {
       rating,
       review: review.length > 0 ? review : null,
@@ -69,8 +75,10 @@ export async function addBook(input: {
   if (!isGenre(input.genre)) return { ok: false, error: "Unknown genre." };
   if (!isStatus(input.status)) return { ok: false, error: "Unknown reading status." };
 
-  const duplicate = await prisma.book.findUnique({
-    where: { openLibraryKey: result.key },
+  const user = await requireUser();
+
+  const duplicate = await prisma.book.findFirst({
+    where: { openLibraryKey: result.key, userId: user.id },
   });
   if (duplicate) {
     return { ok: false, error: `${duplicate.title} is already on the shelf.` };
@@ -82,6 +90,7 @@ export async function addBook(input: {
 
   await prisma.book.create({
     data: {
+      userId: user.id,
       title: result.title,
       author: result.author,
       // Open Library often has no page count; a sane median keeps the spine
@@ -105,10 +114,12 @@ export async function addBook(input: {
 export async function removeBook(id: string): Promise<ActionResult> {
   if (!id) return { ok: false, error: "Missing book." };
 
-  const existing = await prisma.book.findUnique({ where: { id } });
+  const user = await requireUser();
+
+  const existing = await prisma.book.findFirst({ where: { id, userId: user.id } });
   if (!existing) return { ok: false, error: "That book is no longer on the shelf." };
 
-  await prisma.book.delete({ where: { id } });
+  await prisma.book.delete({ where: { id: existing.id } });
 
   revalidatePath("/");
   return { ok: true };

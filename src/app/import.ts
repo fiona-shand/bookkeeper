@@ -9,6 +9,8 @@ import {
   type GoodreadsBook,
   type GoodreadsShelf,
 } from "@/lib/goodreads";
+import { requireUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { importGoodreadsBook } from "@/lib/goodreads-import";
 
 export type GoodreadsPreview =
@@ -23,6 +25,7 @@ export type GoodreadsPreview =
   | { ok: false; error: string };
 
 export async function previewGoodreads(input: string): Promise<GoodreadsPreview> {
+  const user = await requireUser();
   const profileId = resolveProfileId(input);
   if (!profileId) {
     return {
@@ -66,6 +69,12 @@ export async function previewGoodreads(input: string): Promise<GoodreadsPreview>
     };
   }
 
+  // Remembered so the shelf can refresh itself later without asking again.
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { goodreadsProfileId: profileId },
+  });
+
   return { ok: true, profileId, books, counts, cappedShelves };
 }
 
@@ -89,12 +98,13 @@ function sleep(ms: number) {
 export async function importGoodreadsBatch(
   books: GoodreadsBook[],
 ): Promise<ImportOutcome> {
+  const user = await requireUser();
   const outcome: ImportOutcome = { added: 0, updated: 0, failed: [] };
 
   for (const [index, book] of books.entries()) {
     try {
       if (index > 0) await sleep(OPEN_LIBRARY_GAP_MS);
-      const result = await importGoodreadsBook(book);
+      const result = await importGoodreadsBook(book, user.id);
       outcome[result] += 1;
     } catch (error) {
       outcome.failed.push({
@@ -103,6 +113,11 @@ export async function importGoodreadsBatch(
       });
     }
   }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { goodreadsSyncedAt: new Date() },
+  });
 
   revalidatePath("/");
   return outcome;

@@ -27,6 +27,13 @@ TypeScript. No `.env` needed — the database defaults to `prisma/dev.db`.
   on the left leaf and a ruled review page on the right.
 - **Bookmarks.** Anything on the "currently reading" shelf gets a silk marker
   showing above its spine.
+- **Accounts.** Sign up and you get your own shelf; nobody else can see or
+  change it. The first account created adopts any books that predate accounts,
+  so an existing shelf isn't stranded.
+- **Goodreads keeps itself current.** Once you've imported once, the profile is
+  remembered and the shelf refreshes in the background when the last sync is
+  more than six hours old — after the page has already rendered, so you never
+  wait on it.
 - **Filters that actually filter.** Genre and star rating both remove books from
   the shelf rather than fading them, so what's left closes up side by side.
   Arrows either side scroll a shelf too long to fit.
@@ -83,6 +90,22 @@ Three limits come with that, and none of them can be engineered away:
 Re-importing is safe: books are matched on their Goodreads id and updated rather
 than duplicated, and a book you'd already added by hand is matched on its Open
 Library key and adopted rather than doubled.
+
+## Accounts and security
+
+Sign-in is hand-rolled on `node:crypto` rather than an auth library: no OAuth
+app to register, nothing to configure, and it works the moment you clone.
+Passwords are scrypt-hashed with a per-user salt and compared in constant time;
+the session cookie is httpOnly and only the SHA-256 of its token is stored, so a
+leaked database can't be replayed as a set of live logins.
+
+Every Server Action calls `requireUser()` and scopes its query by `userId` —
+Server Actions are reachable by direct POST, not just from our own UI, so an id
+alone is not permission to touch a row.
+
+**What it does not have yet**, and you should know before trusting it with
+anything that matters: no email verification, no password reset, and no rate
+limiting on sign-in attempts.
 
 ## Checks
 
@@ -144,7 +167,6 @@ scripts/            offline checks (npm run check)
 2. **Edit binding and page count** from the book's own page, so spines can be
    corrected after adding.
 3. **Persist recommendations** — the recommend box is still local state.
-4. **Auth**, before this goes anywhere public. There is none: every Server
-   Action is reachable by anyone who can reach the site.
-5. **Accounts and auto-sync** — sign-up so other people get their own shelves,
-   and a Goodreads refresh that runs when the data goes stale.
+5. **Public shelves** — a read-only `/u/<name>` page, so the recommend box has
+   someone to recommend to. Right now a shelf is only visible to its owner.
+6. **Password reset and sign-in rate limiting** — see the security note above.

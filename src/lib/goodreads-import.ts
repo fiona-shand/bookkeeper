@@ -16,12 +16,13 @@ export type ImportResult = "added" | "updated";
  */
 export async function importGoodreadsBook(
   book: GoodreadsBook,
+  userId: string,
 ): Promise<ImportResult> {
   const status = SHELF_STATUS[book.shelf];
 
   // Already imported: refresh the reader's own data and leave the rest alone.
-  const byGoodreads = await prisma.book.findUnique({
-    where: { goodreadsId: book.goodreadsId },
+  const byGoodreads = await prisma.book.findFirst({
+    where: { goodreadsId: book.goodreadsId, userId },
   });
 
   if (byGoodreads) {
@@ -44,7 +45,7 @@ export async function importGoodreadsBook(
 
   // The same book may already be on the shelf from a manual add.
   const byEdition = edition?.key
-    ? await prisma.book.findUnique({ where: { openLibraryKey: edition.key } })
+    ? await prisma.book.findFirst({ where: { openLibraryKey: edition.key, userId } })
     : null;
 
   if (byEdition) {
@@ -62,6 +63,7 @@ export async function importGoodreadsBook(
 
   await prisma.book.create({
     data: {
+      userId,
       title: book.title,
       author: book.author,
       // The feed's own count wins: it's the edition the reader shelved.
