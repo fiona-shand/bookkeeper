@@ -386,6 +386,57 @@ body {
   gap: 0.25rem;
 }
 
+/* Soft edges that say there is more shelf in that direction. */
+.shelf-frame::before,
+.shelf-frame::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4rem;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.shelf-frame::before {
+  left: 2.75rem;
+  background: linear-gradient(to right, var(--color-paper), transparent);
+}
+
+.shelf-frame::after {
+  right: 2.75rem;
+  background: linear-gradient(to left, var(--color-paper-deep), transparent);
+}
+
+.shelf-frame[data-at-start="true"]::before,
+.shelf-frame[data-at-end="true"]::after {
+  opacity: 0;
+}
+
+.shelf-scroll {
+  cursor: grab;
+}
+
+.shelf-scroll:active {
+  cursor: grabbing;
+}
+
+.shelf-scroll:focus-visible {
+  outline: 1px solid var(--color-ink-soft);
+  outline-offset: 6px;
+}
+
+@media (max-width: 40rem) {
+  .shelf-frame::before,
+  .shelf-frame::after {
+    left: 0;
+    right: 0;
+    width: 2rem;
+  }
+}
+
 .shelf-scroll {
   flex: 1;
   min-width: 0;
@@ -393,7 +444,6 @@ body {
   overflow-y: visible;
   padding-top: 3rem;
   scrollbar-width: thin;
-  scroll-behavior: smooth;
 }
 
 .shelf-arrow {

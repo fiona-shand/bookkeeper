@@ -22,6 +22,9 @@ export default function Library({ books }: { books: ShelfBook[] }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Tracks a click-and-drag across the shelf. `moved` is what tells a drag
+  // apart from a click, so dragging past a book doesn't open it.
+  const drag = useRef({ active: false, startX: 0, startScroll: 0, moved: false });
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(true);
 
@@ -61,6 +64,73 @@ export default function Library({ books }: { books: ShelfBook[] }) {
     };
     // visible.length matters: filtering changes how far the shelf can scroll.
   }, [syncArrows, visible.length]);
+
+  // Drag anywhere on the shelf to pull it along.
+  useEffect(() => {
+    function onMove(event: PointerEvent) {
+      const el = scrollRef.current;
+      if (!drag.current.active || !el) return;
+
+      const dx = event.clientX - drag.current.startX;
+      // A few pixels of slop, so a slightly shaky click is still a click.
+      if (!drag.current.moved && Math.abs(dx) < 5) return;
+
+      drag.current.moved = true;
+      el.scrollLeft = drag.current.startScroll - dx;
+    }
+
+    function onUp() {
+      drag.current.active = false;
+    }
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, []);
+
+  function startDrag(event: React.PointerEvent) {
+    const el = scrollRef.current;
+    if (event.button !== 0 || !el) return;
+    drag.current = {
+      active: true,
+      startX: event.clientX,
+      startScroll: el.scrollLeft,
+      moved: false,
+    };
+  }
+
+  // Swallows the click that follows a drag, so releasing over a spine after
+  // dragging doesn't open that book.
+  function swallowDragClick(event: React.MouseEvent) {
+    if (!drag.current.moved) return;
+    event.preventDefault();
+    event.stopPropagation();
+    drag.current.moved = false;
+  }
+
+  function onShelfKeyDown(event: React.KeyboardEvent) {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      nudge(1);
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      nudge(-1);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      el.scrollTo({ left: 0, behavior: "smooth" });
+    } else if (event.key === "End") {
+      event.preventDefault();
+      el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
+    }
+  }
 
   function nudge(direction: -1 | 1) {
     const el = scrollRef.current;
@@ -133,7 +203,7 @@ export default function Library({ books }: { books: ShelfBook[] }) {
         ) : visible.length === 0 ? (
           <p className="empty-shelf">Nothing on the shelf matches that.</p>
         ) : (
-          <div className="shelf-frame">
+          <div className="shelf-frame" data-at-start={atStart} data-at-end={atEnd}>
             <button
               type="button"
               className="shelf-arrow shelf-arrow-left"
@@ -144,7 +214,16 @@ export default function Library({ books }: { books: ShelfBook[] }) {
               <span aria-hidden="true">←</span>
             </button>
 
-            <div className="shelf-scroll" ref={scrollRef}>
+            <div
+              className="shelf-scroll"
+              ref={scrollRef}
+              role="region"
+              aria-label="Bookshelf, scrolls horizontally"
+              tabIndex={0}
+              onPointerDown={startDrag}
+              onClickCapture={swallowDragClick}
+              onKeyDown={onShelfKeyDown}
+            >
               <div className="shelf-inner">
                 <div className="shelf" role="group" aria-label="Bookshelf">
                   {visible.map((book) => (
