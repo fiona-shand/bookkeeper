@@ -8,7 +8,7 @@ export default function AccountBar({ name }: { name: string }) {
 
   return (
     <div className="account-bar">
-      <span className="eyebrow">{name}&rsquo;s shelf</span>
+      <span className="eyebrow">Signed in as {name}</span>
       <button
         type="button"
         className="text-button"

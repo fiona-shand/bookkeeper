@@ -7,6 +7,7 @@ import Library from "@/components/Library";
 import Recommend from "@/components/Recommend";
 import { currentUser } from "@/lib/auth";
 import { isStale, syncGoodreads } from "@/lib/goodreads-sync";
+import { possessive } from "@/lib/possessive";
 import { getShelf } from "@/lib/queries";
 
 // The shelf is read per request, so mutations show up immediately rather than
@@ -60,7 +61,9 @@ export default async function Page() {
           {books.length} books · {pages.toLocaleString()} pages
         </p>
 
-        <h1 className="hero-title">welcome to my world</h1>
+        <h1 className="hero-title">
+          welcome to {possessive(user.name)} world
+        </h1>
 
         <p className="hero-sub">
           Everything I have read, standing up the way it would in a room.
