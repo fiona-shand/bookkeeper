@@ -18,6 +18,15 @@ const globalForPrisma = globalThis as unknown as {
 function createAdapter() {
   const url = process.env.TURSO_DATABASE_URL;
 
+  // On Vercel a file database is worse than useless: it "works", then loses
+  // everything on the next deploy. Fail loudly at deploy time instead.
+  if (!url && process.env.VERCEL) {
+    throw new Error(
+      "TURSO_DATABASE_URL is not set. Vercel's filesystem is ephemeral, so a " +
+        "file-backed SQLite database would silently lose every book. See DEPLOY.md.",
+    );
+  }
+
   if (url) {
     return new PrismaLibSql({
       url,

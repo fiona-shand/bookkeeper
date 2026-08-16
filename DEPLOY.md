@@ -46,6 +46,10 @@ Add two Environment Variables (all three environments):
 
 Deploy.
 
+If you forget the variables, the deploy **fails loudly** with a message pointing
+back here, rather than starting up against a throwaway file and losing your
+books on the next push.
+
 ## 3. Later schema changes
 
 Migrations still run against your local file:
