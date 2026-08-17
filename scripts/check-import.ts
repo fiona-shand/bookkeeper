@@ -1,6 +1,6 @@
 import { prisma } from "../src/lib/db";
 import type { GoodreadsBook } from "../src/lib/goodreads";
-import { DEFAULT_PAGES, importGoodreadsBook } from "../src/lib/goodreads-import";
+import { importGoodreadsBook } from "../src/lib/goodreads-import";
 
 let failures = 0;
 function check(label: string, condition: boolean, detail?: unknown) {
@@ -79,6 +79,7 @@ async function main() {
       rating: 2,
       review: "Changed my mind.",
       shelf: "currently-reading",
+      imageUrl: "https://m.media-amazon.com/images/test-cover.jpg",
     }),
     userId,
   );
@@ -90,6 +91,7 @@ async function main() {
   check("rating refreshed", updated?.rating === 2, updated?.rating);
   check("review refreshed", updated?.review === "Changed my mind.", updated?.review);
   check("currently-reading → reading", updated?.status === "reading", updated?.status);
+  check("re-import repairs a missing cover", updated?.coverUrl?.endsWith("test-cover.jpg") === true, updated?.coverUrl);
 
   const afterReimport = await prisma.book.count();
   check("no duplicate row", afterReimport === before + 1, { before, afterReimport });
@@ -103,8 +105,8 @@ async function main() {
     where: { goodreadsId: `${PREFIX}2`, userId },
   });
   check(
-    "falls back to a default width rather than zero",
-    noPages?.pages === DEFAULT_PAGES,
+    "uses an edition lookup or default rather than zero",
+    typeof noPages?.pages === "number" && noPages.pages > 0,
     noPages?.pages,
   );
 

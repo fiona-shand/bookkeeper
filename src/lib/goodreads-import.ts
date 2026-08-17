@@ -26,9 +26,21 @@ export async function importGoodreadsBook(
   });
 
   if (byGoodreads) {
+    // Older imports deliberately discarded Goodreads-hosted images. Repair
+    // those rows as soon as they pass through the importer again.
+    let recoveredCover = book.imageUrl;
+    if (!byGoodreads.coverUrl && !recoveredCover) {
+      const edition = await lookupEdition(book.isbn, book.title, book.author);
+      recoveredCover = edition?.coverId ? coverUrl(edition.coverId) : null;
+    }
     await prisma.book.update({
       where: { id: byGoodreads.id },
-      data: { rating: book.rating, review: book.review, status },
+      data: {
+        rating: book.rating,
+        review: book.review,
+        status,
+        coverUrl: byGoodreads.coverUrl ?? recoveredCover,
+      },
     });
     return "updated";
   }
@@ -38,9 +50,8 @@ export async function importGoodreadsBook(
   const edition = await lookupEdition(book.isbn, book.title, book.author);
   const openLibraryCover = edition?.coverId ? coverUrl(edition.coverId) : null;
 
-  // The Goodreads image is fine to sample a colour from server-side, but only
-  // an Open Library cover is stored for the browser to load.
-  const colourSource = openLibraryCover ?? book.imageUrl;
+  const storedCover = book.imageUrl ?? openLibraryCover;
+  const colourSource = storedCover;
   const color = colourSource ? await coverColour(colourSource) : FALLBACK_COLOUR;
 
   // The same book may already be on the shelf from a manual add.
@@ -56,6 +67,7 @@ export async function importGoodreadsBook(
         rating: book.rating ?? byEdition.rating,
         review: book.review ?? byEdition.review,
         status,
+        coverUrl: byEdition.coverUrl ?? storedCover,
       },
     });
     return "updated";
@@ -76,7 +88,7 @@ export async function importGoodreadsBook(
       color,
       year: book.year ?? edition?.year ?? null,
       isbn: book.isbn,
-      coverUrl: openLibraryCover,
+      coverUrl: storedCover,
       openLibraryKey: edition?.key ?? null,
       goodreadsId: book.goodreadsId,
       status,

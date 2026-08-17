@@ -75,5 +75,13 @@ export default async function Page() {
     </main>
   );
 
-  return <ShelfExperience covers={books.flatMap((book) => book.coverUrl ? [book.coverUrl] : [])}>{shelf}</ShelfExperience>;
+  return (
+    <ShelfExperience
+      covers={books.flatMap((book) => book.coverUrl ? [book.coverUrl] : [])}
+      goodreadsProfileId={user.goodreadsProfileId}
+      missingCovers={books.filter((book) => !book.coverUrl).length}
+    >
+      {shelf}
+    </ShelfExperience>
+  );
 }
