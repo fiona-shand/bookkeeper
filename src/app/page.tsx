@@ -38,7 +38,7 @@ export default async function Page() {
 
   if (books.length === 0) {
     return (
-      <main className="onboarding-page" data-theme="clothbound">
+      <main className="onboarding-page">
         <AccountBar name={user.name} />
         <section className="onboarding-card">
           <p className="eyebrow">Build your personal archive</p>
@@ -51,7 +51,7 @@ export default async function Page() {
   }
 
   const shelf = (
-    <main className="flex flex-col gap-16 pb-28" data-theme="clothbound">
+    <main className="flex flex-col gap-16 pb-28">
       <header className="masthead">
         <AccountBar name={user.name} />
 

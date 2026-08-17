@@ -90,7 +90,7 @@ export default function ShelfExperience({
   if (ready) return children;
 
   return (
-    <main className="loading-library" data-theme="clothbound">
+    <main className="loading-library">
       <p className="eyebrow">Preparing your archive</p>
       <h1 className="hero-title">{repairing ? "finding every cover" : "shelving your books"}</h1>
       {repairing ? <p className="hero-sub">Your Goodreads shelves are filling in artwork that was missed.</p> : null}
