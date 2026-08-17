@@ -192,6 +192,9 @@ body {
   width: 100%;
   max-width: 30rem;
   text-align: left;
+  /* Takes a row of its own rather than squeezing in beside the buttons. */
+  flex: 1 1 100%;
+  margin: 0 auto;
 }
 
 .add-status {
@@ -292,6 +295,191 @@ body {
   height: 100%;
   background: var(--color-ink);
   transition: width 0.3s ease;
+}
+
+/* ---------- error page ---------- */
+
+.error-page {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 8rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.1rem;
+  text-align: left;
+}
+
+.error-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(2.25rem, 6vw, 3.25rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+
+.error-body {
+  font-family: var(--font-display);
+  font-size: 1.12rem;
+  line-height: 1.55;
+  color: var(--color-ink-soft);
+}
+
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.error-actions .text-button {
+  text-decoration: none;
+}
+
+.error-digest {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.7rem;
+  color: var(--color-ink-faint);
+  margin-top: 0.75rem;
+}
+
+/* ---------- floating card ---------- */
+
+.card-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+
+.card-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background: rgba(28, 24, 20, 0.5);
+}
+
+.floating-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 32rem;
+  background: var(--color-page);
+  border: 1px solid var(--color-rule);
+  padding: 1.9rem 2rem 2rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  box-shadow: 0 26px 60px -22px rgba(28, 24, 20, 0.6);
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-rule-soft);
+}
+
+.card-close {
+  background: none;
+  border: 0;
+  padding: 0 0 0 1rem;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.card-close:hover {
+  color: var(--color-ink);
+}
+
+@media (max-width: 40rem) {
+  .card-overlay {
+    align-items: flex-start;
+    padding: 1rem;
+  }
+
+  .floating-card {
+    padding: 1.4rem 1.25rem 1.75rem;
+  }
+}
+
+/* ---------- how to get your Goodreads link ---------- */
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.steps li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--color-ink-soft);
+}
+
+.steps strong {
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.step-number {
+  flex: 0 0 auto;
+  width: 1.35rem;
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: var(--color-gilt);
+  border-bottom: 1px solid var(--color-rule);
+  text-align: center;
+  padding-bottom: 0.1rem;
+}
+
+.steps-example-label {
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  margin-top: 0.35rem;
+}
+
+.steps-example {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--color-ink-soft);
+  background: var(--color-card);
+  border: 1px solid var(--color-rule);
+  border-left: 2px solid var(--color-gilt);
+  padding: 0.7rem 0.85rem;
+  overflow-x: auto;
+  word-break: break-all;
+}
+
+.add-quiet {
+  font-size: 0.88rem;
+  color: var(--color-ink-faint);
 }
 
 /* ---------- genre filters ---------- */

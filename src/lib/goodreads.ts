@@ -68,6 +68,49 @@ export function resolveProfileId(input: string): string | null {
   return null;
 }
 
+/** Pulls a numeric profile id out of any Goodreads URL, or a page of HTML. */
+export function extractProfileId(text: string): string | null {
+  const match = /\/user\/show\/(\d+)/.exec(text);
+  return match ? match[1] : null;
+}
+
+/**
+ * Goodreads custom URLs are letters, digits, dots, dashes and underscores.
+ * A bare number is an id, not a username, so it's excluded here.
+ */
+export function isLikelyUsername(value: string): boolean {
+  const trimmed = value.trim();
+  return /^[A-Za-z0-9._-]{2,50}$/.test(trimmed) && !/^\d+$/.test(trimmed);
+}
+
+/**
+ * Turns a username into the numeric id the RSS feed needs.
+ *
+ * A Goodreads custom URL (goodreads.com/rgay) redirects to the real profile at
+ * /user/show/<id>-<slug>, so following it and reading the landing URL gives us
+ * the id. This only works for people who set a custom URL — most Goodreads
+ * users never do, and for them only the profile URL or id will work.
+ */
+export async function resolveUsername(username: string): Promise<string | null> {
+  const response = await fetch(
+    `https://www.goodreads.com/${encodeURIComponent(username.trim())}`,
+    {
+      headers: { "User-Agent": USER_AGENT },
+      redirect: "follow",
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) return null;
+
+  // Usually the redirect has already landed us on the numeric profile.
+  const fromUrl = extractProfileId(response.url);
+  if (fromUrl) return fromUrl;
+
+  // Otherwise the canonical link in the page carries it.
+  return extractProfileId(await response.text());
+}
+
 export function feedUrl(profileId: string, shelf: GoodreadsShelf): string {
   const url = new URL(`https://www.goodreads.com/review/list_rss/${profileId}`);
   url.searchParams.set("shelf", shelf);
