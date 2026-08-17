@@ -39,7 +39,6 @@ export default async function Page() {
   if (books.length === 0) {
     return (
       <main className="onboarding-page">
-        <AccountBar name={user.name} />
         <section className="onboarding-card">
           <p className="eyebrow">Build your personal archive</p>
           <h1 className="hero-title">bring in your books</h1>
