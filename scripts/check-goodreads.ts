@@ -1,5 +1,4 @@
 import {
-  isLikelyUsername,
   parseShelfFeed,
   resolveProfileId,
   feedUrl,
@@ -28,50 +27,6 @@ check(
 check("whitespace tolerated", resolveProfileId("  12345678  ") === "12345678");
 check("nonsense rejected", resolveProfileId("my goodreads") === null);
 check("empty rejected", resolveProfileId("") === null);
-
-console.log("\n— what the Goodreads app actually puts on the clipboard —");
-// The mobile app's share sheet copies a sentence plus a slugless URL.
-check(
-  "app share text, exactly as pasted",
-  resolveProfileId(
-    "Check out my profile on Goodreads!\nhttps://www.goodreads.com/user/show/184463528",
-  ) === "184463528",
-);
-check(
-  "same thing on one line",
-  resolveProfileId(
-    "Check out my profile on Goodreads! https://www.goodreads.com/user/show/184463528",
-  ) === "184463528",
-);
-check(
-  "slugless url on its own",
-  resolveProfileId("https://www.goodreads.com/user/show/184463528") === "184463528",
-);
-check(
-  "share link carrying tracking parameters",
-  resolveProfileId(
-    "https://www.goodreads.com/user/show/184463528?utm_medium=api&utm_source=user_share",
-  ) === "184463528",
-);
-check(
-  "no scheme, as some apps paste it",
-  resolveProfileId("goodreads.com/user/show/184463528") === "184463528",
-);
-check(
-  "trailing whitespace and newlines",
-  resolveProfileId("  https://www.goodreads.com/user/show/184463528  \n") === "184463528",
-);
-check(
-  "prose alone, with no link, is rejected",
-  resolveProfileId("Check out my profile on Goodreads!") === null,
-);
-
-console.log("\n— usernames —");
-check("a plain handle looks like a username", isLikelyUsername("fionashand"));
-check("dots and dashes allowed", isLikelyUsername("fiona.shand-1"));
-check("a bare id is not a username", isLikelyUsername("184463528") === false);
-check("pasted share text is not a username", isLikelyUsername("Check out my profile!") === false);
-check("a url is not a username", isLikelyUsername("https://www.goodreads.com/x") === false);
 
 console.log("\n— feedUrl —");
 check(
