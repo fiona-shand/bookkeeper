@@ -27,16 +27,6 @@ TypeScript. No `.env` needed — the database defaults to `prisma/dev.db`.
   on the left leaf and a ruled review page on the right.
 - **Bookmarks.** Anything on the "currently reading" shelf gets a silk marker
   showing above its spine.
-- **Accounts.** Sign up and you get your own shelf; nobody else can see or
-  change it. The first account created adopts any books that predate accounts,
-  so an existing shelf isn't stranded.
-- **Goodreads keeps itself current.** Once you've imported once, the profile is
-  remembered and the shelf refreshes in the background when the last sync is
-  more than six hours old — after the page has already rendered, so you never
-  wait on it.
-- **Filters that actually filter.** Genre and star rating both remove books from
-  the shelf rather than fading them, so what's left closes up side by side.
-  Arrows either side scroll a shelf too long to fit.
 
 ## Why the spines are generated
 
@@ -46,7 +36,7 @@ and ISBNdb all serve front covers only. So the shelf is built from three fields:
 | Field | Drives | Source |
 | --- | --- | --- |
 | `pages` | Spine width, via the bookbinding PPI formula | Open Library, or a Goodreads CSV |
-| `binding` | Spine height | Open Library's `physical_format` |
+| `binding` | Spine height, and the shelf's ragged top edge | Defaults to trade paperback |
 | `color` | Spine fill | `node-vibrant`, sampled from the cover on add |
 
 `src/lib/spine.ts` holds the geometry. Width uses the formula printers use:
@@ -57,11 +47,7 @@ spine width = page count / PPI + cover allowance
 
 Because the maths is real, so are the proportions: a 1,006-page paperback
 renders three times wider than a 272-page one, and hardcovers stand taller than
-mass market. Height comes from the binding, plus a small variation seeded off the book's id
-— two trade paperbacks are never quite the same height, and without that wobble
-a shelf of one binding is a flat line.
-
-`readableInk()` picks black or cream lettering from each spine's
+mass market. `readableInk()` picks black or cream lettering from each spine's
 relative luminance so pale spines stay legible.
 
 Full API research: `docs/bookshelf-api-research.html` — open it in a browser.
@@ -77,10 +63,6 @@ Three limits come with that, and none of them can be engineered away:
 
 - **The profile must be public.** A private profile returns an empty feed, not an
   error, so the importer reports that as "check Settings → Privacy on Goodreads".
-- **Getting your link.** In the Goodreads app: profile → Share → copy link. Paste
-  the whole clipboard, sentence and all — the id is picked out of it. A bare
-  username also works, but only for people who set a Goodreads custom URL, which
-  most never do.
 - **100 books per shelf, maximum.** That's the feed's ceiling. When a shelf comes
   back at exactly 100 the importer says so, because you probably have more. The
   usual workaround is to split large shelves on Goodreads (`read-2025`,
@@ -95,29 +77,13 @@ Re-importing is safe: books are matched on their Goodreads id and updated rather
 than duplicated, and a book you'd already added by hand is matched on its Open
 Library key and adopted rather than doubled.
 
-## Accounts and security
-
-Sign-in is hand-rolled on `node:crypto` rather than an auth library: no OAuth
-app to register, nothing to configure, and it works the moment you clone.
-Passwords are scrypt-hashed with a per-user salt and compared in constant time;
-the session cookie is httpOnly and only the SHA-256 of its token is stored, so a
-leaked database can't be replayed as a set of live logins.
-
-Every Server Action calls `requireUser()` and scopes its query by `userId` —
-Server Actions are reachable by direct POST, not just from our own UI, so an id
-alone is not permission to touch a row.
-
-**What it does not have yet**, and you should know before trusting it with
-anything that matters: no email verification, no password reset, and no rate
-limiting on sign-in attempts.
-
 ## Checks
 
 ```bash
 npm run check
 ```
 
-Runs 105 assertions over the parts that talk to other people's services —
+Runs 78 assertions over the parts that talk to other people's services —
 Open Library search parsing, colour extraction, Goodreads feed parsing, and the
 import's database behaviour. They use fixtures rather than live calls, so they
 work offline; the import checks write to the database and clean up after
@@ -151,17 +117,22 @@ scripts/            offline checks (npm run check)
 ## Notes
 
 - `npm run db:reset` wipes and reseeds. Prisma will ask for confirmation first.
-- `npm run db:backfill` re-looks-up every book on Open Library and fills in
-  binding, missing page counts and missing covers. Run it once if your shelf was
-  imported before bindings were read properly — otherwise every imported book is
-  the same height.
-- Deploying: see `DEPLOY.md`. SQLite cannot work on Vercel.
 - Open Library asks that you identify your app. Put a real contact address in
   `USER_AGENT` in `src/lib/openlibrary.ts` before running this anywhere public.
 - Genre is guessed from Open Library's subjects, which are free-form and messy.
   The add flow lets you correct it before the book goes on the shelf.
-- Binding comes from Open Library's free-text `physical_format`; anything
-  unrecognised falls back to trade paperback.
+- Search results don't carry binding, so new books default to trade paperback.
+
+## Deploying (Vercel)
+
+SQLite on disk doesn't survive Vercel serverless, so production uses [Turso](https://turso.tech) (hosted libSQL). Local `npm run dev` is unchanged.
+
+Set these on the Vercel project (and only there — leave them unset locally):
+
+- `TURSO_DATABASE_URL`
+- `TURSO_AUTH_TOKEN`
+
+The schema still lives in `prisma/migrations`. Apply it to Turso with `turso db shell`, then seed with those two env vars set.
 
 ## Next steps
 
@@ -171,6 +142,5 @@ scripts/            offline checks (npm run check)
 2. **Edit binding and page count** from the book's own page, so spines can be
    corrected after adding.
 3. **Persist recommendations** — the recommend box is still local state.
-5. **Public shelves** — a read-only `/u/<name>` page, so the recommend box has
-   someone to recommend to. Right now a shelf is only visible to its owner.
-6. **Password reset and sign-in rate limiting** — see the security note above.
+4. **Auth**, before this goes anywhere public. There is none: every Server
+   Action is reachable by anyone who can reach the site.

@@ -1,14 +1,14 @@
 /**
  * Spine geometry.
  *
- * No book API returns spine images, so every spine here is generated. Width
- * uses the formula printers use to lay out a cover:
+ * No book API returns spine images, so every spine on the shelf is generated.
+ * Width comes from the same formula printers use to lay out a cover:
  *
  *     spine width = page count / PPI + cover allowance
  *
- * PPI ("pages per inch") is how many printed pages stack to an inch. Height
- * comes from the binding, plus a small per-book variation, because two trade
- * paperbacks off the same shelf are never exactly the same height.
+ * PPI ("pages per inch") is how many printed pages stack to an inch — thicker
+ * paper means a lower PPI. Height comes from the binding. Driving both off real
+ * measurements is what gives the shelf its uneven top edge.
  */
 
 export type Binding = "hardcover" | "trade" | "massMarket";
@@ -29,14 +29,14 @@ export const BINDING: Record<Binding, BindingSpec> = {
   massMarket: { ppi: 560, allowance: 0.05, heightIn: 6.75, label: "Mass market" },
 };
 
-/** Rendering scale. Bump this to make the whole shelf bigger. */
-export const PX_PER_INCH = 42;
+/** Rendering scale. Large enough for the shelf to feel substantial on desktop. */
+export const PX_PER_INCH = 38;
 
 /** Narrower than this and the vertical title stops being legible. */
 const MIN_SPINE_PX = 18;
 
-/** Real editions vary; this is how much height wobble to allow, either way. */
-const HEIGHT_VARIATION = 0.055;
+/** A little extra paper/board presence beyond the strict printer formula. */
+const WIDTH_BOOST = 0.96;
 
 export type SpineGeometry = {
   inches: number;
@@ -44,28 +44,21 @@ export type SpineGeometry = {
   height: number;
 };
 
-/**
- * Stable hash of the book id, so a book's height wobble is the same on every
- * render and every machine — random jitter would make the shelf twitch.
- */
-function seedFraction(seed: string): number {
-  let hash = 2166136261;
-  for (let i = 0; i < seed.length; i += 1) {
-    hash ^= seed.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
+function stableHash(seed: string): number {
+  let hash = 0;
+  for (const character of seed) {
+    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
   }
+  return hash;
+}
 
-  // FNV alone barely moves for ids that differ only in the last character, so
-  // two adjacent ids would come out the same height. This is murmur3's
-  // finalizer, which spreads that difference across the whole word.
-  hash ^= hash >>> 16;
-  hash = Math.imul(hash, 2246822507);
-  hash ^= hash >>> 13;
-  hash = Math.imul(hash, 3266489909);
-  hash ^= hash >>> 16;
-
-  // -1..1
-  return ((hash >>> 0) / 0xffffffff) * 2 - 1;
+/**
+ * A small, stable trim variation keeps books of the same binding from looking
+ * machine-cut. Real editions vary within a format, so derive the offset from
+ * the book id rather than using randomness that would jump between renders.
+ */
+function trimVariation(seed: string): number {
+  return (stableHash(seed) % 29) - 14;
 }
 
 export function spineGeometry(
@@ -76,13 +69,13 @@ export function spineGeometry(
   const spec = BINDING[binding];
   const inches = pages / spec.ppi + spec.allowance;
 
-  const wobble = seed ? seedFraction(seed) * HEIGHT_VARIATION : 0;
-  const heightIn = spec.heightIn * (1 + wobble);
-
   return {
     inches,
-    width: Math.max(MIN_SPINE_PX, Math.round(inches * PX_PER_INCH)),
-    height: Math.round(heightIn * PX_PER_INCH),
+    width: Math.max(
+      MIN_SPINE_PX,
+      Math.round(inches * PX_PER_INCH * WIDTH_BOOST),
+    ),
+    height: Math.round(spec.heightIn * PX_PER_INCH) + trimVariation(seed),
   };
 }
 
@@ -103,22 +96,8 @@ export function readableInk(hex: string): string {
 
 /** Type gets smaller on narrow spines so long titles still fit. */
 export function spineFontSize(width: number): number {
-  if (width >= 44) return 14;
-  if (width >= 32) return 12.5;
-  if (width >= 24) return 11;
-  return 9.5;
-}
-
-/**
- * Open Library reports binding as free text on the edition ("Hardcover",
- * "Mass Market Paperback", "pbk.", …). Anything unrecognised falls back to
- * trade paperback, which is the commonest case.
- */
-export function bindingFromFormat(format: string | null | undefined): Binding {
-  if (!format) return "trade";
-  const value = format.toLowerCase();
-
-  if (/mass.?market/.test(value)) return "massMarket";
-  if (/hardcover|hardback|hard cover|board|cloth/.test(value)) return "hardcover";
-  return "trade";
+  if (width >= 48) return 15.5;
+  if (width >= 35) return 14;
+  if (width >= 27) return 12.5;
+  return 10.75;
 }

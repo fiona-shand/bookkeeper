@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { searchBooks } from "@/lib/openlibrary";
 
 /**
@@ -5,6 +6,11 @@ import { searchBooks } from "@/lib/openlibrary";
  * User-Agent Open Library asks for attached, and keeps the request on one origin.
  */
 export async function GET(request: Request) {
+  const { isAuthenticated } = await auth();
+  if (!isAuthenticated) {
+    return Response.json({ error: "Sign in required." }, { status: 401 });
+  }
+
   const query = new URL(request.url).searchParams.get("q") ?? "";
 
   if (query.trim().length < 2) {

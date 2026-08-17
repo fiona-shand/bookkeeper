@@ -9,16 +9,38 @@ import {
   type ReadingStatus,
 } from "@/lib/books";
 import type { ShelfBook } from "@/lib/queries";
-import { BINDING, readableInk } from "@/lib/spine";
+import { BINDING } from "@/lib/spine";
+import { themeBookIndex } from "@/lib/theme";
 import StarRating from "./StarRating";
 
 type BookViewProps = {
   book: ShelfBook;
   onClose: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
+  canNavigate: boolean;
 };
 
-export default function BookView({ book, onClose }: BookViewProps) {
+export default function BookView(props: BookViewProps) {
   const [open, setOpen] = useState(false);
+
+  // Let the closed cover paint for a frame, so only the first book animates.
+  useEffect(() => {
+    const timer = window.setTimeout(() => setOpen(true), 40);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  return <BookViewContent key={props.book.id} {...props} open={open} />;
+}
+
+function BookViewContent({
+  book,
+  onClose,
+  onPrevious,
+  onNext,
+  canNavigate,
+  open,
+}: BookViewProps & { open: boolean }) {
   const [rating, setRating] = useState<number | null>(book.rating);
   const [review, setReview] = useState(book.review ?? "");
   const [status, setStatus] = useState<ReadingStatus>(book.status);
@@ -26,19 +48,16 @@ export default function BookView({ book, onClose }: BookViewProps) {
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  // Let the closed cover paint for a frame, so the opening actually animates.
-  useEffect(() => {
-    const timer = window.setTimeout(() => setOpen(true), 40);
-    return () => window.clearTimeout(timer);
-  }, []);
-
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
+      if (event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement) return;
+      if (event.key === "ArrowLeft" && canNavigate) void handleNavigate(onPrevious);
+      if (event.key === "ArrowRight" && canNavigate) void handleNavigate(onNext);
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose]);
+  });
 
   const dirty =
     rating !== book.rating ||
@@ -65,7 +84,27 @@ export default function BookView({ book, onClose }: BookViewProps) {
     });
   }
 
-  const ink = readableInk(book.color);
+  async function handleNavigate(navigate: () => void) {
+    if (pending) return;
+    if (dirty) {
+      const result = await saveReview({ id: book.id, rating, review, status });
+      if (!result.ok) {
+        setMessage(result.error);
+        return;
+      }
+    }
+    navigate();
+  }
+
+  const colorIndex = themeBookIndex(book.id);
+  const coverColor = `var(--book-${colorIndex})`;
+  const ink = `var(--book-ink-${colorIndex})`;
+  const titleSize =
+    book.title.length >= 70
+      ? "long"
+      : book.title.length >= 45
+        ? "medium"
+        : "short";
 
   return (
     <div
@@ -80,6 +119,17 @@ export default function BookView({ book, onClose }: BookViewProps) {
         aria-label="Close book"
         onClick={onClose}
       />
+
+      {canNavigate ? (
+        <>
+          <button className="book-nav book-nav-previous" type="button" aria-label="Previous book" onClick={() => void handleNavigate(onPrevious)}>
+            <span aria-hidden="true">←</span>
+          </button>
+          <button className="book-nav book-nav-next" type="button" aria-label="Next book" onClick={() => void handleNavigate(onNext)}>
+            <span aria-hidden="true">→</span>
+          </button>
+        </>
+      ) : null}
 
       <div className="book-stage" data-open={open}>
         <div className="book-spread">
@@ -125,19 +175,22 @@ export default function BookView({ book, onClose }: BookViewProps) {
           <div className="book-cover">
             <div
               className="book-cover-front"
-              style={{ background: book.color, color: ink }}
+              style={{ background: coverColor, color: ink }}
             >
               {book.coverUrl ? (
                 <Image
                   src={book.coverUrl}
                   alt={`Cover of ${book.title}`}
                   fill
+                  unoptimized
                   sizes="340px"
-                  style={{ objectFit: "cover" }}
+                  style={{ objectFit: "contain" }}
                 />
               ) : (
                 <div className="cover-typeset">
-                  <span className="cover-title">{book.title}</span>
+                  <span className="cover-title" data-title-size={titleSize}>
+                    {book.title}
+                  </span>
                   <span className="cover-author">{book.author}</span>
                 </div>
               )}
@@ -145,10 +198,25 @@ export default function BookView({ book, onClose }: BookViewProps) {
 
             {/* The inside of the front cover — the left-hand page once open. */}
             <div className="book-page book-cover-back">
-              <div className="book-headings">
-                <h2 className="detail-title">{book.title}</h2>
+              <div className="book-headings" data-has-cover={Boolean(book.coverUrl)}>
+                <h2 className="detail-title" data-title-size={titleSize}>
+                  {book.title}
+                </h2>
                 <p className="detail-author">{book.author}</p>
               </div>
+
+              {book.coverUrl ? (
+                <div className="detail-cover">
+                  <Image
+                    src={book.coverUrl}
+                    alt={`Cover of ${book.title}`}
+                    fill
+                    unoptimized
+                    sizes="86px"
+                    style={{ objectFit: "cover" }}
+                  />
+                </div>
+              ) : null}
 
               <div className="rating-row">
                 <span className="eyebrow">Your rating</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   importGoodreadsBatch,
   previewGoodreads,
@@ -58,15 +58,6 @@ export default function ImportGoodreads() {
     setPhase({ name: "done", outcome: totals });
   }
 
-  useEffect(() => {
-    if (!open) return;
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") close();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
-
   function close() {
     setOpen(false);
     setPhase({ name: "idle" });
@@ -74,49 +65,23 @@ export default function ImportGoodreads() {
     setError(null);
   }
 
-  const trigger = (
-    <button
-      type="button"
-      className="recommend-button"
-      onClick={() => setOpen(true)}
-    >
-      Import from Goodreads
-    </button>
-  );
-
-  if (!open) return trigger;
+  if (!open) {
+    return (
+      <button
+        type="button"
+        className="recommend-button"
+        onClick={() => setOpen(true)}
+      >
+        Import from Goodreads
+      </button>
+    );
+  }
 
   return (
-    <>
-      {trigger}
-
-      <div
-        className="card-overlay"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="import-heading"
-      >
-        <button
-          type="button"
-          className="card-backdrop"
-          aria-label="Close"
-          onClick={close}
-        />
-
-        <div className="floating-card">
-          <div className="card-head">
-            <p className="eyebrow" id="import-heading">
-              Import from Goodreads
-            </p>
-            <button
-              type="button"
-              className="card-close"
-              onClick={close}
-              aria-label="Close"
-            >
-              <span aria-hidden="true">×</span>
-            </button>
-          </div>
+    <div className="add-panel">
+      <label className="eyebrow" htmlFor="goodreads-profile">
+        Import from Goodreads
+      </label>
 
       {phase.name === "idle" || phase.name === "finding" ? (
         <>
@@ -125,48 +90,18 @@ export default function ImportGoodreads() {
             className="recommend-field"
             value={profile}
             onChange={(event) => setProfile(event.target.value)}
-            placeholder="paste your Goodreads share link"
+            placeholder="your Goodreads profile URL"
             autoComplete="off"
             onKeyDown={(event) => {
               if (event.key === "Enter") void find();
             }}
           />
-          <ol className="steps">
-            <li>
-              <span className="step-number">1</span>
-              <span>
-                Open the <strong>Goodreads app</strong> and go to your own
-                profile.
-              </span>
-            </li>
-            <li>
-              <span className="step-number">2</span>
-              <span>
-                Tap <strong>Share</strong>, then <strong>Copy</strong>.
-              </span>
-            </li>
-            <li>
-              <span className="step-number">3</span>
-              <span>
-                Paste it in the box above. Leave the sentence Goodreads adds —
-                only the link matters.
-              </span>
-            </li>
-          </ol>
-
-          <p className="steps-example-label">What you&rsquo;ll paste looks like</p>
-          <p className="steps-example">
-            Check out my profile on Goodreads!
-            https://www.goodreads.com/user/show/184463528
+          <p className="add-status">
+            Your profile has to be public. Goodreads shut its API down in 2020 —
+            this reads the RSS feed your public shelves still publish, so it can
+            see your ratings and reviews but not more than {FEED_CAP} books per
+            shelf.
           </p>
-
-          <p className="add-status add-quiet">
-            Your shelves have to be public — Goodreads hides them otherwise. It
-            shut its API down in 2020, so this reads the RSS feed public profiles
-            still publish: your ratings and reviews come across, but no more than
-            {" "}{FEED_CAP} books per shelf.
-          </p>
-
           <div className="add-actions">
             <button
               type="button"
@@ -267,9 +202,7 @@ export default function ImportGoodreads() {
         </>
       ) : null}
 
-          {error ? <p className="add-status add-error">{error}</p> : null}
-        </div>
-      </div>
-    </>
+      {error ? <p className="add-status add-error">{error}</p> : null}
+    </div>
   );
 }

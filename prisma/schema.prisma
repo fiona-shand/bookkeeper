@@ -7,41 +7,10 @@ datasource db {
   provider = "sqlite"
 }
 
-model User {
-  id           String @id @default(cuid())
-  email        String @unique
-  name         String
-  passwordHash String
-
-  // Where this reader's Goodreads shelf lives, and when it was last pulled.
-  goodreadsProfileId String?
-  goodreadsSyncedAt  DateTime?
-
-  createdAt DateTime @default(now())
-
-  books    Book[]
-  sessions Session[]
-}
-
-model Session {
-  // The SHA-256 of the cookie token, never the token itself: a leaked database
-  // then can't be replayed as a login.
-  id        String   @id
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-}
-
 model Book {
   id      String @id @default(cuid())
-
-  // Nullable only for books that predate accounts; the first account created
-  // claims them. Every query filters on it.
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Clerk user id. Every query and mutation is scoped to this owner.
+  ownerId String
   title   String
   author  String
   // Drives spine width via the PPI formula in src/lib/spine.ts.
@@ -69,8 +38,7 @@ model Book {
   addedAt   DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Two readers may each shelve the same book; one reader may not shelve it twice.
-  @@unique([userId, openLibraryKey])
-  @@unique([userId, goodreadsId])
-  @@index([userId, status])
+  @@unique([ownerId, openLibraryKey])
+  @@unique([ownerId, goodreadsId])
+  @@index([ownerId, status])
 }

@@ -11,12 +11,14 @@
     "postinstall": "prisma generate",
     "db:setup": "prisma migrate deploy && prisma db seed",
     "db:reset": "prisma migrate reset --force",
-    "db:backfill": "tsx scripts/backfill-editions.ts"
+    "vercel-build": "prisma generate && next build"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.7.6",
+    "@libsql/client": "^0.17.4",
     "@prisma/adapter-better-sqlite3": "^7.9.1",
     "@prisma/adapter-libsql": "^7.9.1",
     "@prisma/client": "^7.9.1",

@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/lib/auth";
+import { auth } from "@clerk/nextjs/server";
 import { GENRES, READING_STATUSES, type Genre, type ReadingStatus } from "@/lib/books";
-import { coverColour, FALLBACK_COLOUR } from "@/lib/colour";
+import { coverColour, fallbackColour } from "@/lib/colour";
 import { prisma } from "@/lib/db";
 import { coverUrl, type SearchResult } from "@/lib/openlibrary";
 
@@ -33,17 +33,15 @@ export async function saveReview(input: {
   review: string;
   status: ReadingStatus;
 }): Promise<ActionResult> {
+  const { userId } = await auth.protect();
   if (!input.id) return { ok: false, error: "Missing book." };
   if (!isStatus(input.status)) return { ok: false, error: "Unknown reading status." };
 
   const review = input.review.trim();
   const rating = normaliseRating(input.rating);
 
-  const user = await requireUser();
-
-  // Scoped by userId, so this can't be pointed at someone else's book by id.
   const existing = await prisma.book.findFirst({
-    where: { id: input.id, userId: user.id },
+    where: { id: input.id, ownerId: userId },
   });
   if (!existing) return { ok: false, error: "That book is no longer on the shelf." };
 
@@ -67,6 +65,7 @@ export async function addBook(input: {
   genre: Genre;
   status: ReadingStatus;
 }): Promise<ActionResult> {
+  const { userId } = await auth.protect();
   const { result } = input;
 
   if (!result?.key || !result.title) {
@@ -75,10 +74,10 @@ export async function addBook(input: {
   if (!isGenre(input.genre)) return { ok: false, error: "Unknown genre." };
   if (!isStatus(input.status)) return { ok: false, error: "Unknown reading status." };
 
-  const user = await requireUser();
-
-  const duplicate = await prisma.book.findFirst({
-    where: { openLibraryKey: result.key, userId: user.id },
+  const duplicate = await prisma.book.findUnique({
+    where: {
+      ownerId_openLibraryKey: { ownerId: userId, openLibraryKey: result.key },
+    },
   });
   if (duplicate) {
     return { ok: false, error: `${duplicate.title} is already on the shelf.` };
@@ -86,17 +85,19 @@ export async function addBook(input: {
 
   const cover = result.coverId ? coverUrl(result.coverId) : null;
   // Sampled once, on add — never per render, which would hammer the covers API.
-  const color = cover ? await coverColour(cover) : FALLBACK_COLOUR;
+  const color = cover ? await coverColour(cover) : fallbackColour(result.key);
 
   await prisma.book.create({
     data: {
-      userId: user.id,
+      ownerId: userId,
       title: result.title,
       author: result.author,
       // Open Library often has no page count; a sane median keeps the spine
       // from collapsing to the minimum width.
       pages: result.pages && result.pages > 0 ? result.pages : 320,
-      binding: result.binding,
+      // Search results don't carry binding, and trade paperback is the
+      // commonest case. Change it on the book's own page.
+      binding: "trade",
       genre: input.genre,
       color,
       year: result.year,
@@ -112,11 +113,10 @@ export async function addBook(input: {
 }
 
 export async function removeBook(id: string): Promise<ActionResult> {
+  const { userId } = await auth.protect();
   if (!id) return { ok: false, error: "Missing book." };
 
-  const user = await requireUser();
-
-  const existing = await prisma.book.findFirst({ where: { id, userId: user.id } });
+  const existing = await prisma.book.findFirst({ where: { id, ownerId: userId } });
   if (!existing) return { ok: false, error: "That book is no longer on the shelf." };
 
   await prisma.book.delete({ where: { id: existing.id } });
