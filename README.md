@@ -77,6 +77,10 @@ Three limits come with that, and none of them can be engineered away:
 
 - **The profile must be public.** A private profile returns an empty feed, not an
   error, so the importer reports that as "check Settings → Privacy on Goodreads".
+- **Getting your link.** In the Goodreads app: profile → Share → copy link. Paste
+  the whole clipboard, sentence and all — the id is picked out of it. A bare
+  username also works, but only for people who set a Goodreads custom URL, which
+  most never do.
 - **100 books per shelf, maximum.** That's the feed's ceiling. When a shelf comes
   back at exactly 100 the importer says so, because you probably have more. The
   usual workaround is to split large shelves on Goodreads (`read-2025`,
@@ -113,7 +117,7 @@ limiting on sign-in attempts.
 npm run check
 ```
 
-Runs 89 assertions over the parts that talk to other people's services —
+Runs 105 assertions over the parts that talk to other people's services —
 Open Library search parsing, colour extraction, Goodreads feed parsing, and the
 import's database behaviour. They use fixtures rather than live calls, so they
 work offline; the import checks write to the database and clean up after

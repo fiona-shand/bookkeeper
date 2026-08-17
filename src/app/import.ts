@@ -5,7 +5,9 @@ import {
   FEED_CAP,
   GOODREADS_SHELVES,
   fetchShelf,
+  isLikelyUsername,
   resolveProfileId,
+  resolveUsername,
   type GoodreadsBook,
   type GoodreadsShelf,
 } from "@/lib/goodreads";
@@ -26,12 +28,32 @@ export type GoodreadsPreview =
 
 export async function previewGoodreads(input: string): Promise<GoodreadsPreview> {
   const user = await requireUser();
-  const profileId = resolveProfileId(input);
+  let profileId = resolveProfileId(input);
+
+  // A bare username only resolves if that person set a Goodreads custom URL.
+  if (!profileId && isLikelyUsername(input)) {
+    try {
+      profileId = await resolveUsername(input);
+    } catch {
+      return { ok: false, error: "Couldn't reach Goodreads to look that name up." };
+    }
+
+    if (!profileId) {
+      return {
+        ok: false,
+        error:
+          `No Goodreads profile at goodreads.com/${input.trim()}. That shortcut only ` +
+          "works for people who've set a custom URL — otherwise open the profile on " +
+          "Goodreads and paste the whole address instead.",
+      };
+    }
+  }
+
   if (!profileId) {
     return {
       ok: false,
       error:
-        "That doesn't look like a Goodreads profile. Paste your profile URL, or just the number from it.",
+        "That doesn't look like a Goodreads profile. Paste a username, a profile URL, or the number from it.",
     };
   }
 

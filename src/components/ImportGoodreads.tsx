@@ -90,17 +90,22 @@ export default function ImportGoodreads() {
             className="recommend-field"
             value={profile}
             onChange={(event) => setProfile(event.target.value)}
-            placeholder="your Goodreads profile URL"
+            placeholder="paste your Goodreads share link"
             autoComplete="off"
             onKeyDown={(event) => {
               if (event.key === "Enter") void find();
             }}
           />
           <p className="add-status">
-            Your profile has to be public. Goodreads shut its API down in 2020 —
-            this reads the RSS feed your public shelves still publish, so it can
-            see your ratings and reviews but not more than {FEED_CAP} books per
-            shelf.
+            In the Goodreads app: <strong>your profile → Share → copy link</strong>,
+            then paste the whole thing here — the sentence it copies alongside the
+            link is fine to leave in. A username works too, if you&rsquo;ve set a
+            custom Goodreads URL.
+          </p>
+          <p className="add-status">
+            Your shelves have to be public. Goodreads shut its API down in 2020, so
+            this reads the RSS feed public profiles still publish: it can see your
+            ratings and reviews, but no more than {FEED_CAP} books per shelf.
           </p>
           <div className="add-actions">
             <button
