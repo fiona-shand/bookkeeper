@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Cormorant_Garamond, Jost } from "next/font/google";
 import "./globals.css";
 
@@ -36,9 +35,7 @@ export default function RootLayout({
       className={`${cormorant.variable} ${jost.variable}`}
       suppressHydrationWarning
     >
-      <body>
-        <ClerkProvider>{children}</ClerkProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

@@ -9,11 +9,9 @@ function check(label: string, condition: boolean, detail?: unknown) {
 }
 
 const PREFIX = "test-import-";
-const OWNER_ID = "test-import-owner";
-
-function importedBook(goodreadsId: string) {
-  return { ownerId_goodreadsId: { ownerId: OWNER_ID, goodreadsId } };
-}
+const TEST_EMAIL = "check-import@example.invalid";
+let userId = "";
+let otherUserId = "";
 
 function fake(overrides: Partial<GoodreadsBook> & { goodreadsId: string }): GoodreadsBook {
   return {
@@ -32,27 +30,40 @@ function fake(overrides: Partial<GoodreadsBook> & { goodreadsId: string }): Good
 
 async function cleanup() {
   await prisma.book.deleteMany({
-    where: { ownerId: OWNER_ID, goodreadsId: { startsWith: PREFIX } },
+    where: { goodreadsId: { startsWith: PREFIX } },
+  });
+  await prisma.user.deleteMany({
+    where: { email: { in: [TEST_EMAIL, `other-${TEST_EMAIL}`] } },
   });
 }
 
 async function main() {
   await cleanup();
-  const before = await prisma.book.count({ where: { ownerId: OWNER_ID } });
+  const before = await prisma.book.count();
+
+  const user = await prisma.user.create({
+    data: { email: TEST_EMAIL, name: "Check", passwordHash: "unused" },
+  });
+  userId = user.id;
+  const other = await prisma.user.create({
+    data: { email: `other-${TEST_EMAIL}`, name: "Other", passwordHash: "unused" },
+  });
+  otherUserId = other.id;
 
   console.log("\n— importing a new book —");
   // Open Library is blocked from this container, so lookupEdition returns null
   // and the importer must cope using only what the feed gave it.
   const first = await importGoodreadsBook(
     fake({ goodreadsId: `${PREFIX}1`, title: "Feed Pages Book", pages: 412 }),
-    OWNER_ID,
+    userId,
   );
   check("reports added", first === "added", first);
 
-  const stored = await prisma.book.findUnique({
-    where: importedBook(`${PREFIX}1`),
+  const stored = await prisma.book.findFirst({
+    where: { goodreadsId: `${PREFIX}1`, userId },
   });
   check("row created", stored !== null);
+  check("belongs to the importing reader", stored?.userId === userId);
   check("uses the feed's page count", stored?.pages === 412, stored?.pages);
   check("maps read → read", stored?.status === "read", stored?.status);
   check("keeps the rating", stored?.rating === 4, stored?.rating);
@@ -69,27 +80,27 @@ async function main() {
       review: "Changed my mind.",
       shelf: "currently-reading",
     }),
-    OWNER_ID,
+    userId,
   );
   check("reports updated, not added", second === "updated", second);
 
-  const updated = await prisma.book.findUnique({
-    where: importedBook(`${PREFIX}1`),
+  const updated = await prisma.book.findFirst({
+    where: { goodreadsId: `${PREFIX}1`, userId },
   });
   check("rating refreshed", updated?.rating === 2, updated?.rating);
   check("review refreshed", updated?.review === "Changed my mind.", updated?.review);
   check("currently-reading → reading", updated?.status === "reading", updated?.status);
 
-  const afterReimport = await prisma.book.count({ where: { ownerId: OWNER_ID } });
+  const afterReimport = await prisma.book.count();
   check("no duplicate row", afterReimport === before + 1, { before, afterReimport });
 
   console.log("\n— missing page count —");
   await importGoodreadsBook(
     fake({ goodreadsId: `${PREFIX}2`, title: "No Pages Book", pages: null }),
-    OWNER_ID,
+    userId,
   );
-  const noPages = await prisma.book.findUnique({
-    where: importedBook(`${PREFIX}2`),
+  const noPages = await prisma.book.findFirst({
+    where: { goodreadsId: `${PREFIX}2`, userId },
   });
   check(
     "falls back to a default width rather than zero",
@@ -106,16 +117,33 @@ async function main() {
       review: null,
       shelf: "to-read",
     }),
-    OWNER_ID,
+    userId,
   );
-  const want = await prisma.book.findUnique({ where: importedBook(`${PREFIX}3`) });
+  const want = await prisma.book.findFirst({ where: { goodreadsId: `${PREFIX}3`, userId } });
   check("to-read → want", want?.status === "want", want?.status);
   check("rating stays null", want?.rating === null, want?.rating);
   check("reviewedAt stays null when nothing was written", want?.reviewedAt === null, want?.reviewedAt);
 
+  console.log("\n— two readers, same book —");
+  const mine = await importGoodreadsBook(
+    fake({ goodreadsId: `${PREFIX}shared`, title: "Shared Book" }),
+    userId,
+  );
+  const theirs = await importGoodreadsBook(
+    fake({ goodreadsId: `${PREFIX}shared`, title: "Shared Book" }),
+    otherUserId,
+  );
+  check("both readers get their own copy", mine === "added" && theirs === "added", { mine, theirs });
+  const copies = await prisma.book.count({ where: { goodreadsId: `${PREFIX}shared` } });
+  check("two rows, not one", copies === 2, copies);
+  const notMine = await prisma.book.findFirst({
+    where: { goodreadsId: `${PREFIX}shared`, userId: otherUserId },
+  });
+  check("the other reader's copy is theirs", notMine?.userId === otherUserId);
+
   console.log("\n— cleaning up —");
   await cleanup();
-  const after = await prisma.book.count({ where: { ownerId: OWNER_ID } });
+  const after = await prisma.book.count();
   check("test rows removed", after === before, { before, after });
 
   console.log(failures === 0 ? "\nall checks passed\n" : `\n${failures} FAILED\n`);

@@ -1,15 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
 import {
   FEED_CAP,
   GOODREADS_SHELVES,
   fetchShelf,
+  isLikelyUsername,
   resolveProfileId,
+  resolveUsername,
   type GoodreadsBook,
   type GoodreadsShelf,
 } from "@/lib/goodreads";
+import { requireUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { importGoodreadsBook } from "@/lib/goodreads-import";
 
 export type GoodreadsPreview =
@@ -24,13 +27,33 @@ export type GoodreadsPreview =
   | { ok: false; error: string };
 
 export async function previewGoodreads(input: string): Promise<GoodreadsPreview> {
-  await auth.protect();
-  const profileId = resolveProfileId(input);
+  const user = await requireUser();
+  let profileId = resolveProfileId(input);
+
+  // A bare username only resolves if that person set a Goodreads custom URL.
+  if (!profileId && isLikelyUsername(input)) {
+    try {
+      profileId = await resolveUsername(input);
+    } catch {
+      return { ok: false, error: "Couldn't reach Goodreads to look that name up." };
+    }
+
+    if (!profileId) {
+      return {
+        ok: false,
+        error:
+          `No Goodreads profile at goodreads.com/${input.trim()}. That shortcut only ` +
+          "works for people who've set a custom URL — otherwise open the profile on " +
+          "Goodreads and paste the whole address instead.",
+      };
+    }
+  }
+
   if (!profileId) {
     return {
       ok: false,
       error:
-        "That doesn't look like a Goodreads profile. Paste your profile URL, or just the number from it.",
+        "That doesn't look like a Goodreads profile. Paste a username, a profile URL, or the number from it.",
     };
   }
 
@@ -68,6 +91,12 @@ export async function previewGoodreads(input: string): Promise<GoodreadsPreview>
     };
   }
 
+  // Remembered so the shelf can refresh itself later without asking again.
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { goodreadsProfileId: profileId },
+  });
+
   return { ok: true, profileId, books, counts, cappedShelves };
 }
 
@@ -91,13 +120,13 @@ function sleep(ms: number) {
 export async function importGoodreadsBatch(
   books: GoodreadsBook[],
 ): Promise<ImportOutcome> {
-  const { userId } = await auth.protect();
+  const user = await requireUser();
   const outcome: ImportOutcome = { added: 0, updated: 0, failed: [] };
 
   for (const [index, book] of books.entries()) {
     try {
       if (index > 0) await sleep(OPEN_LIBRARY_GAP_MS);
-      const result = await importGoodreadsBook(book, userId);
+      const result = await importGoodreadsBook(book, user.id);
       outcome[result] += 1;
     } catch (error) {
       outcome.failed.push({
@@ -106,6 +135,11 @@ export async function importGoodreadsBatch(
       });
     }
   }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { goodreadsSyncedAt: new Date() },
+  });
 
   revalidatePath("/");
   return outcome;

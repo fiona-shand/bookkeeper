@@ -1,4 +1,4 @@
-import { coverColour, fallbackColour } from "./colour";
+import { coverColour, FALLBACK_COLOUR } from "./colour";
 import { prisma } from "./db";
 import { SHELF_STATUS, type GoodreadsBook } from "./goodreads";
 import { coverUrl, lookupEdition } from "./openlibrary";
@@ -16,33 +16,19 @@ export type ImportResult = "added" | "updated";
  */
 export async function importGoodreadsBook(
   book: GoodreadsBook,
-  ownerId: string,
+  userId: string,
 ): Promise<ImportResult> {
   const status = SHELF_STATUS[book.shelf];
 
   // Already imported: refresh the reader's own data and leave the rest alone.
-  const byGoodreads = await prisma.book.findUnique({
-    where: {
-      ownerId_goodreadsId: { ownerId, goodreadsId: book.goodreadsId },
-    },
+  const byGoodreads = await prisma.book.findFirst({
+    where: { goodreadsId: book.goodreadsId, userId },
   });
 
   if (byGoodreads) {
-    const missingCoverEdition = byGoodreads.coverUrl
-      ? null
-      : await lookupEdition(book.isbn, book.title, book.author);
-    const missingCoverUrl =
-      book.imageUrl ??
-      (missingCoverEdition?.coverId ? coverUrl(missingCoverEdition.coverId) : null);
     await prisma.book.update({
       where: { id: byGoodreads.id },
-      data: {
-        rating: book.rating,
-        review: book.review,
-        status,
-        coverUrl: missingCoverUrl ?? byGoodreads.coverUrl,
-        isbn: byGoodreads.isbn ?? missingCoverEdition?.isbn ?? book.isbn,
-      },
+      data: { rating: book.rating, review: book.review, status },
     });
     return "updated";
   }
@@ -52,18 +38,14 @@ export async function importGoodreadsBook(
   const edition = await lookupEdition(book.isbn, book.title, book.author);
   const openLibraryCover = edition?.coverId ? coverUrl(edition.coverId) : null;
 
-  const colourSource = book.imageUrl ?? openLibraryCover;
-  const color = colourSource
-    ? await coverColour(colourSource)
-    : fallbackColour(book.goodreadsId);
+  // The Goodreads image is fine to sample a colour from server-side, but only
+  // an Open Library cover is stored for the browser to load.
+  const colourSource = openLibraryCover ?? book.imageUrl;
+  const color = colourSource ? await coverColour(colourSource) : FALLBACK_COLOUR;
 
   // The same book may already be on the shelf from a manual add.
   const byEdition = edition?.key
-    ? await prisma.book.findUnique({
-        where: {
-          ownerId_openLibraryKey: { ownerId, openLibraryKey: edition.key },
-        },
-      })
+    ? await prisma.book.findFirst({ where: { openLibraryKey: edition.key, userId } })
     : null;
 
   if (byEdition) {
@@ -81,20 +63,20 @@ export async function importGoodreadsBook(
 
   await prisma.book.create({
     data: {
-      ownerId,
+      userId,
       title: book.title,
       author: book.author,
       // The feed's own count wins: it's the edition the reader shelved.
       pages:
         book.pages ??
         (edition?.pages && edition.pages > 0 ? edition.pages : DEFAULT_PAGES),
-      // The feed doesn't say, and trade paperback is the commonest case.
+      // Goodreads does not expose binding, so use the common trade format.
       binding: "trade",
       genre: edition?.genre ?? "Fiction",
       color,
       year: book.year ?? edition?.year ?? null,
       isbn: book.isbn,
-      coverUrl: book.imageUrl ?? openLibraryCover,
+      coverUrl: openLibraryCover,
       openLibraryKey: edition?.key ?? null,
       goodreadsId: book.goodreadsId,
       status,

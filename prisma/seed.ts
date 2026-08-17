@@ -1,7 +1,10 @@
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaClient } from "../src/generated/prisma/client";
 import { BOOKS } from "../src/lib/books";
-import { createPrismaClient } from "../src/lib/db";
+import { DATABASE_URL } from "../src/lib/database-url";
 
-const prisma = createPrismaClient();
+const adapter = new PrismaBetterSqlite3({ url: DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   for (const book of BOOKS) {
@@ -14,7 +17,6 @@ async function main() {
       update: {},
       create: {
         id: book.id,
-        ownerId: process.env.SEED_OWNER_ID ?? "local-seed-owner",
         title: book.title,
         author: book.author,
         pages: book.pages,
