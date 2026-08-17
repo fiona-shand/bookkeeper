@@ -6,7 +6,7 @@ apart like a real one, with your review written on the right-hand page.
 
 ```bash
 npm install       # also generates the Prisma client
-npm run db:setup  # creates the SQLite database and seeds 29 books
+npm run db:setup  # creates the SQLite database
 npm run dev       # http://localhost:3000
 ```
 
@@ -96,7 +96,7 @@ This isn't a full test suite — there's no runner and no component tests.
 ```
 prisma/
   schema.prisma     Book model
-  seed.ts           29 starter books from src/lib/books.ts
+  seed.ts           confirms the database is ready
 src/
   app/
     page.tsx        reads the shelf from SQLite
@@ -110,13 +110,13 @@ src/
     goodreads-import.ts  per-book import logic
     colour.ts       cover colour extraction
     queries.ts      shelf reads
-    books.ts        seed data
+    books.ts        shared book types and shelf constants
 scripts/            offline checks (npm run check)
 ```
 
 ## Notes
 
-- `npm run db:reset` wipes and reseeds. Prisma will ask for confirmation first.
+- `npm run db:reset` wipes the local database. Prisma will ask for confirmation first.
 - Open Library asks that you identify your app. Put a real contact address in
   `USER_AGENT` in `src/lib/openlibrary.ts` before running this anywhere public.
 - Genre is guessed from Open Library's subjects, which are free-form and messy.
