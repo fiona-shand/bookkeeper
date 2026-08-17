@@ -96,23 +96,25 @@ export default function ImportGoodreads({ onboarding = false }: { onboarding?: b
             className="recommend-field"
             value={profile}
             onChange={(event) => setProfile(event.target.value)}
-            placeholder="your Goodreads profile URL"
+            placeholder="paste your Goodreads share link"
             autoComplete="off"
             onKeyDown={(event) => {
               if (event.key === "Enter") void find();
             }}
           />
-          <p className="add-status">
-            Your profile has to be public. Goodreads shut its API down in 2020 —
-            this reads the RSS feed your public shelves still publish, so it can
-            see your ratings and reviews but not more than {FEED_CAP} books per
-            shelf.
-          </p>
           <ol className="steps">
-            <li><span className="step-number">1</span><span>Open the <strong>Goodreads app</strong> and tap your profile picture.</span></li>
-            <li><span className="step-number">2</span><span>Tap <strong>Share profile</strong>, then copy the link.</span></li>
-            <li><span className="step-number">3</span><span>Paste the whole copied link above. Extra text is fine.</span></li>
+            <li><span className="step-number">1</span><span>Open the <strong>Goodreads app</strong> and go to your own profile.</span></li>
+            <li><span className="step-number">2</span><span>Tap <strong>Share</strong>, then <strong>Copy</strong>.</span></li>
+            <li><span className="step-number">3</span><span>Paste it above. Leave the sentence Goodreads adds—only the link matters.</span></li>
           </ol>
+          <p className="steps-example-label">What you&rsquo;ll paste looks like</p>
+          <p className="steps-example">
+            Check out my profile on Goodreads! https://www.goodreads.com/user/show/184463528
+          </p>
+          <p className="add-status add-quiet">
+            Your shelves have to be public—Goodreads hides them otherwise. This
+            brings across ratings and reviews, up to {FEED_CAP} books per shelf.
+          </p>
           <div className="add-actions">
             <button
               type="button"
