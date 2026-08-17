@@ -52,20 +52,32 @@ books on the next push.
 
 ## 3. Later schema changes
 
-Migrations still run against your local file:
+**Every schema change is two steps, and forgetting the second one takes the site
+down.** This has already happened once: the accounts migration ran locally, the
+deploy went out, and production kept serving a database with no `User` table —
+so every signed-in page load returned a 500 while signed-out visitors saw a
+perfectly normal landing page.
 
 ```bash
-npx prisma migrate dev --name whatever   # local
+npx prisma migrate dev --name whatever                                  # 1. local
+turso db shell bookkeeper ".dump" > backup.sql                          # 2. back up prod
+turso db shell bookkeeper < prisma/migrations/<stamp>_whatever/migration.sql   # 3. prod
 ```
 
-To apply the same change to production, run the generated SQL against Turso:
+Prisma's migrate CLI doesn't drive libSQL, so step 3 is manual and nothing warns
+you when it's skipped. Two habits make that survivable:
 
-```bash
-turso db shell bookkeeper < prisma/migrations/<timestamp>_whatever/migration.sql
-```
+- **Check the tables after deploying.** `greatreads.page/api/health` reports
+  whether the database is reachable and readable — a missing table shows up
+  there as a 503 with the driver's own error.
+- **Compare what's applied.** Locally, `ls prisma/migrations`; in production,
+  `turso db shell bookkeeper "select migration_name from _prisma_migrations"`.
+  Applying SQL by hand does not add a row to that table, so record it yourself
+  if you want the two lists to match.
 
-Not elegant — Prisma's migrate CLI doesn't drive libSQL directly yet — but it's
-the same SQL either way, so nothing can drift silently.
+A migration that rebuilds a table (any change to a column or constraint on an
+existing model) copies every row into a new table and drops the old one. It is
+safe, but it is the reason step 2 exists.
 
 ## Before you share the URL
 
