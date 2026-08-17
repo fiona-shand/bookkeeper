@@ -475,6 +475,72 @@ body {
   transition: width 0.3s ease;
 }
 
+/* ---------- Goodreads app instructions ---------- */
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.steps li {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.75rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--color-ink-soft);
+}
+
+.steps strong {
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.step-number {
+  display: block;
+  width: 1.6rem;
+  padding-bottom: 0.15rem;
+  border-bottom: 1px solid var(--color-rule);
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  line-height: 1.45rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: var(--color-gilt);
+}
+
+.steps-example-label {
+  margin-top: 0.35rem;
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.steps-example {
+  padding: 0.7rem 0.85rem;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--color-rule);
+  border-left: 2px solid var(--color-gilt);
+  background: var(--color-paper);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--color-ink-soft);
+}
+
+.add-quiet {
+  font-size: 0.88rem;
+  color: var(--color-ink-faint);
+}
+
 /* ---------- genre filters ---------- */
 
 .library-search {

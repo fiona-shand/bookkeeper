@@ -7,7 +7,7 @@ import {
   previewGoodreads,
   type ImportOutcome,
 } from "@/app/import";
-import { FEED_CAP, type GoodreadsBook } from "@/lib/goodreads";
+import { FEED_CAP, resolveProfileIdFromClipboard, type GoodreadsBook } from "@/lib/goodreads";
 
 /** Small enough that progress moves visibly, large enough to stay quick. */
 const BATCH_SIZE = 4;
@@ -96,6 +96,17 @@ export default function ImportGoodreads({ onboarding = false }: { onboarding?: b
             className="recommend-field"
             value={profile}
             onChange={(event) => setProfile(event.target.value)}
+            onPaste={(event) => {
+              const clipboard = event.clipboardData;
+              const profileId = resolveProfileIdFromClipboard([
+                clipboard.getData("text/uri-list"),
+                clipboard.getData("text/html"),
+                clipboard.getData("text/plain"),
+              ]);
+              if (!profileId) return;
+              event.preventDefault();
+              setProfile(profileId);
+            }}
             placeholder="paste your Goodreads share link"
             autoComplete="off"
             onKeyDown={(event) => {

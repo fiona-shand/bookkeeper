@@ -2,6 +2,7 @@ import {
   isLikelyUsername,
   parseShelfFeed,
   resolveProfileId,
+  resolveProfileIdFromClipboard,
   feedUrl,
   toPlainText,
   SHELF_STATUS,
@@ -64,6 +65,14 @@ check(
 check(
   "prose alone, with no link, is rejected",
   resolveProfileId("Check out my profile on Goodreads!") === null,
+);
+check(
+  "iOS rich text keeps the hidden profile link",
+  resolveProfileIdFromClipboard([
+    "",
+    '<a href="https://www.goodreads.com/user/show/184463528-fiona?ref=share">Check out my profile on Goodreads!</a>',
+    "Check out my profile on Goodreads!",
+  ]) === "184463528",
 );
 
 console.log("\n— usernames —");

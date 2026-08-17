@@ -68,6 +68,15 @@ export function resolveProfileId(input: string): string | null {
   return null;
 }
 
+/** Finds a profile link even when iOS stores it only in rich clipboard HTML. */
+export function resolveProfileIdFromClipboard(values: string[]): string | null {
+  for (const value of values) {
+    const profileId = resolveProfileId(value.replaceAll("&amp;", "&"));
+    if (profileId) return profileId;
+  }
+  return null;
+}
+
 /** Pulls a numeric profile id out of any Goodreads URL, or a page of HTML. */
 export function extractProfileId(text: string): string | null {
   const match = /\/user\/show\/(\d+)/.exec(text);
