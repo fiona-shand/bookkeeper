@@ -93,7 +93,7 @@ export default function ShelfExperience({
     <main className="loading-library" data-theme="clothbound">
       <p className="eyebrow">Preparing your archive</p>
       <h1 className="hero-title">{repairing ? "finding every cover" : "shelving your books"}</h1>
-      <p className="hero-sub">{repairing ? "Your Goodreads shelves are filling in artwork that was missed." : "Every cover is being set in place before the library opens."}</p>
+      {repairing ? <p className="hero-sub">Your Goodreads shelves are filling in artwork that was missed.</p> : null}
       <div className="loading-count" aria-live="polite">{repairing ? `${missingCovers} covers to check` : `${loaded} of ${new Set(covers).size} covers`}</div>
       <div className="progress" role="progressbar" aria-valuenow={loaded} aria-valuemin={0} aria-valuemax={new Set(covers).size}>
         <div className="progress-fill" style={{ width: repairing ? "18%" : `${Math.round((loaded / new Set(covers).size) * 100)}%` }} />
