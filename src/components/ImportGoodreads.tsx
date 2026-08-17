@@ -96,17 +96,42 @@ export default function ImportGoodreads() {
               if (event.key === "Enter") void find();
             }}
           />
-          <p className="add-status">
-            In the Goodreads app: <strong>your profile → Share → copy link</strong>,
-            then paste the whole thing here — the sentence it copies alongside the
-            link is fine to leave in. A username works too, if you&rsquo;ve set a
-            custom Goodreads URL.
+          <ol className="steps">
+            <li>
+              <span className="step-number">1</span>
+              <span>
+                Open the <strong>Goodreads app</strong> and go to your own
+                profile.
+              </span>
+            </li>
+            <li>
+              <span className="step-number">2</span>
+              <span>
+                Tap <strong>Share</strong>, then <strong>Copy</strong>.
+              </span>
+            </li>
+            <li>
+              <span className="step-number">3</span>
+              <span>
+                Paste it in the box above. Leave the sentence Goodreads adds —
+                only the link matters.
+              </span>
+            </li>
+          </ol>
+
+          <p className="steps-example-label">What you&rsquo;ll paste looks like</p>
+          <p className="steps-example">
+            Check out my profile on Goodreads!
+            https://www.goodreads.com/user/show/184463528
           </p>
-          <p className="add-status">
-            Your shelves have to be public. Goodreads shut its API down in 2020, so
-            this reads the RSS feed public profiles still publish: it can see your
-            ratings and reviews, but no more than {FEED_CAP} books per shelf.
+
+          <p className="add-status add-quiet">
+            Your shelves have to be public — Goodreads hides them otherwise. It
+            shut its API down in 2020, so this reads the RSS feed public profiles
+            still publish: your ratings and reviews come across, but no more than
+            {" "}{FEED_CAP} books per shelf.
           </p>
+
           <div className="add-actions">
             <button
               type="button"
