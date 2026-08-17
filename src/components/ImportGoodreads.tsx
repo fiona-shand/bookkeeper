@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   importGoodreadsBatch,
   previewGoodreads,
@@ -58,6 +58,15 @@ export default function ImportGoodreads() {
     setPhase({ name: "done", outcome: totals });
   }
 
+  useEffect(() => {
+    if (!open) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") close();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   function close() {
     setOpen(false);
     setPhase({ name: "idle" });
@@ -65,23 +74,49 @@ export default function ImportGoodreads() {
     setError(null);
   }
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        className="recommend-button"
-        onClick={() => setOpen(true)}
-      >
-        Import from Goodreads
-      </button>
-    );
-  }
+  const trigger = (
+    <button
+      type="button"
+      className="recommend-button"
+      onClick={() => setOpen(true)}
+    >
+      Import from Goodreads
+    </button>
+  );
+
+  if (!open) return trigger;
 
   return (
-    <div className="add-panel">
-      <label className="eyebrow" htmlFor="goodreads-profile">
-        Import from Goodreads
-      </label>
+    <>
+      {trigger}
+
+      <div
+        className="card-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="import-heading"
+      >
+        <button
+          type="button"
+          className="card-backdrop"
+          aria-label="Close"
+          onClick={close}
+        />
+
+        <div className="floating-card">
+          <div className="card-head">
+            <p className="eyebrow" id="import-heading">
+              Import from Goodreads
+            </p>
+            <button
+              type="button"
+              className="card-close"
+              onClick={close}
+              aria-label="Close"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
 
       {phase.name === "idle" || phase.name === "finding" ? (
         <>
@@ -232,7 +267,9 @@ export default function ImportGoodreads() {
         </>
       ) : null}
 
-      {error ? <p className="add-status add-error">{error}</p> : null}
-    </div>
+          {error ? <p className="add-status add-error">{error}</p> : null}
+        </div>
+      </div>
+    </>
   );
 }

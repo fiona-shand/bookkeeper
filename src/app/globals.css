@@ -297,6 +297,78 @@ body {
   transition: width 0.3s ease;
 }
 
+/* ---------- floating card ---------- */
+
+.card-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+
+.card-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background: rgba(28, 24, 20, 0.5);
+}
+
+.floating-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 32rem;
+  background: var(--color-page);
+  border: 1px solid var(--color-rule);
+  padding: 1.9rem 2rem 2rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  box-shadow: 0 26px 60px -22px rgba(28, 24, 20, 0.6);
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-rule-soft);
+}
+
+.card-close {
+  background: none;
+  border: 0;
+  padding: 0 0 0 1rem;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.card-close:hover {
+  color: var(--color-ink);
+}
+
+@media (max-width: 40rem) {
+  .card-overlay {
+    align-items: flex-start;
+    padding: 1rem;
+  }
+
+  .floating-card {
+    padding: 1.4rem 1.25rem 1.75rem;
+  }
+}
+
 /* ---------- how to get your Goodreads link ---------- */
 
 .steps {
