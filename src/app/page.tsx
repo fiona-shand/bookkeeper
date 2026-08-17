@@ -3,6 +3,7 @@ import AddBook from "@/components/AddBook";
 import AuthPanel from "@/components/AuthPanel";
 import ImportGoodreads from "@/components/ImportGoodreads";
 import Library from "@/components/Library";
+import ShelfExperience from "@/components/ShelfExperience";
 import { currentUser } from "@/lib/auth";
 import { getShelf } from "@/lib/queries";
 
@@ -35,7 +36,21 @@ export default async function Page() {
   const pages = books.reduce((total, book) => total + book.pages, 0);
   const firstName = user.name.trim().split(/\s+/)[0] || "My";
 
-  return (
+  if (books.length === 0) {
+    return (
+      <main className="onboarding-page" data-theme="clothbound">
+        <AccountBar name={user.name} />
+        <section className="onboarding-card">
+          <p className="eyebrow">Build your personal archive</p>
+          <h1 className="hero-title">bring in your books</h1>
+          <p className="hero-sub">Start with the shelves you already keep on Goodreads.</p>
+          <ImportGoodreads onboarding />
+        </section>
+      </main>
+    );
+  }
+
+  const shelf = (
     <main className="flex flex-col gap-16 pb-28" data-theme="clothbound">
       <header className="masthead">
         <AccountBar name={user.name} />
@@ -59,4 +74,6 @@ export default async function Page() {
       <Library books={books} />
     </main>
   );
+
+  return <ShelfExperience covers={books.flatMap((book) => book.coverUrl ? [book.coverUrl] : [])}>{shelf}</ShelfExperience>;
 }

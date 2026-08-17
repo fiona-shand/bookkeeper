@@ -77,6 +77,7 @@ export default function Spine({ book, selected, onSelect, display }: SpineProps)
             src={book.coverUrl}
             alt=""
             fill
+            unoptimized
             sizes="90px"
             style={{ objectFit: "cover", objectPosition: "left center" }}
           />
@@ -85,7 +86,7 @@ export default function Spine({ book, selected, onSelect, display }: SpineProps)
 
       {display === "peek" && book.coverUrl ? (
         <span className="spine-cover-peek" aria-hidden="true">
-          <Image src={book.coverUrl} alt="" fill sizes="48px" style={{ objectFit: "cover", objectPosition: "left center" }} />
+          <Image src={book.coverUrl} alt="" fill unoptimized sizes="48px" style={{ objectFit: "cover", objectPosition: "left center" }} />
         </span>
       ) : null}
       {/* Silk marker for whatever you're in the middle of. */}

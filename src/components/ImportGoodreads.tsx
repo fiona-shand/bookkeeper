@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   importGoodreadsBatch,
@@ -18,8 +19,9 @@ type Phase =
   | { name: "importing"; done: number; total: number }
   | { name: "done"; outcome: ImportOutcome };
 
-export default function ImportGoodreads() {
-  const [open, setOpen] = useState(false);
+export default function ImportGoodreads({ onboarding = false }: { onboarding?: boolean }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(onboarding);
   const [profile, setProfile] = useState("");
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [error, setError] = useState<string | null>(null);
@@ -59,13 +61,17 @@ export default function ImportGoodreads() {
   }
 
   function close() {
+    if (onboarding) {
+      router.refresh();
+      return;
+    }
     setOpen(false);
     setPhase({ name: "idle" });
     setProfile("");
     setError(null);
   }
 
-  if (!open) {
+  if (!open && !onboarding) {
     return (
       <button
         type="button"
@@ -78,7 +84,7 @@ export default function ImportGoodreads() {
   }
 
   return (
-    <div className="add-panel">
+    <div className={onboarding ? "onboarding-import" : "add-panel"}>
       <label className="eyebrow" htmlFor="goodreads-profile">
         Import from Goodreads
       </label>
@@ -102,6 +108,11 @@ export default function ImportGoodreads() {
             see your ratings and reviews but not more than {FEED_CAP} books per
             shelf.
           </p>
+          <ol className="steps">
+            <li><span className="step-number">1</span><span>Open the <strong>Goodreads app</strong> and tap your profile picture.</span></li>
+            <li><span className="step-number">2</span><span>Tap <strong>Share profile</strong>, then copy the link.</span></li>
+            <li><span className="step-number">3</span><span>Paste the whole copied link above. Extra text is fine.</span></li>
+          </ol>
           <div className="add-actions">
             <button
               type="button"
@@ -111,9 +122,7 @@ export default function ImportGoodreads() {
             >
               {phase.name === "finding" ? "Looking…" : "Find my books"}
             </button>
-            <button type="button" className="text-button" onClick={close}>
-              Cancel
-            </button>
+            {!onboarding ? <button type="button" className="text-button" onClick={close}>Cancel</button> : null}
           </div>
         </>
       ) : null}
@@ -148,9 +157,7 @@ export default function ImportGoodreads() {
             >
               Import {phase.books.length} books
             </button>
-            <button type="button" className="text-button" onClick={close}>
-              Cancel
-            </button>
+            {!onboarding ? <button type="button" className="text-button" onClick={close}>Cancel</button> : null}
           </div>
         </>
       ) : null}
@@ -196,7 +203,7 @@ export default function ImportGoodreads() {
           ) : null}
           <div className="add-actions">
             <button type="button" className="ink-button" onClick={close}>
-              Done
+              {onboarding ? "Open my library" : "Done"}
             </button>
           </div>
         </>
