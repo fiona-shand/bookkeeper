@@ -123,6 +123,11 @@ export default function ImportGoodreads({ onboarding = false }: { onboarding?: b
             Check out my profile on Goodreads! https://www.goodreads.com/user/show/184463528
           </p>
           <p className="add-status add-quiet">
+            After you paste, the box may change to a number like
+            {" "}<strong>184463528</strong>. That&rsquo;s your Goodreads profile ID—not
+            an error or a password—and it&rsquo;s how we find your public shelves.
+          </p>
+          <p className="add-status add-quiet">
             Your shelves have to be public—Goodreads hides them otherwise. This
             brings across ratings and reviews, up to {FEED_CAP} books per shelf.
           </p>
